@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#E0E0E0">
+
+    <!-- Class Schedule Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Class Schedule"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="#009688"
+        android:textColor="#FFFFFF" />
+
+    <!-- ListView for Class Schedule -->
+    <ListView
+        android:id="@+id/listViewClassSchedule"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#BDBDBD"
+        android:dividerHeight="1dp" />
+
+    <!-- Add Course Button -->
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Show Courses"
+        android:id="@+id/btnShowCourses"
+        android:background="#009688"
+        android:textColor="#FFFFFF"
+        android:padding="16dp" />
+</LinearLayout>

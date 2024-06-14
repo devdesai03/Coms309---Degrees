@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>degreeflowchart.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">degreeflowchart.java</span></div><h1>degreeflowchart.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Handles the flowchart of a degree and course interactions.
+ */
+<span class="fc" id="L32">public class degreeflowchart extends AppCompatActivity {</span>
+    /**
+     * Retrieves the base URL for API requests.
+     * @return The base URL for API requests
+     */
+    public String baseUrl() {
+<span class="fc" id="L38">        return MainActivity.getBaseURL();</span>
+    }
+
+<span class="fc" id="L41">    private Long studentId = Long.valueOf(18);</span>
+    public void setStudentId(Long studentId) {
+<span class="nc" id="L43">        this.studentId = studentId;</span>
+<span class="nc" id="L44">    }</span>
+<span class="fc" id="L45">    private Long degreeId = Long.valueOf(11);</span>
+    public void setDegreeId(Long degreeId) {
+<span class="nc" id="L47">        this.degreeId = degreeId;</span>
+<span class="nc" id="L48">    }</span>
+
+    public void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L51">        super.onCreate(savedInstanceState);</span>
+
+<span class="fc" id="L53">        setContentView(R.layout.activity_degreeflowchart);</span>
+
+<span class="fc" id="L55">        String url = &quot;/degrees/&quot; + degreeId + &quot;/flowchart?studentId=&quot; + studentId;</span>
+
+<span class="fc" id="L57">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, baseUrl() + url, null,</span>
+                (JSONObject response) -&gt; {
+                    try {
+<span class="fc" id="L60">                        loadDegreeFlowchart(response);</span>
+<span class="nc" id="L61">                    } catch (JSONException e) {</span>
+<span class="nc" id="L62">                        e.printStackTrace(System.out);</span>
+<span class="fc" id="L63">                    }</span>
+<span class="fc" id="L64">                },</span>
+                (VolleyError error) -&gt; {
+<span class="nc" id="L66">                    System.out.println(&quot;The error is: &quot; + error);</span>
+<span class="nc" id="L67">                }</span>
+        );
+        // Do something with value!
+<span class="fc" id="L70">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+
+
+//        try {
+//            JSONObject data = new JSONObject(courseActivity_TEST.Companion.getTEST_FLOWCHART());
+//            loadDegreeFlowchart(data);
+//        } catch (JSONException e) {
+//            throw new RuntimeException(e);
+//        }
+<span class="fc" id="L79">    }</span>
+
+    /**
+     * Loads the degree flowchart data and displays it on the screen.
+     * @param data The JSON data representing the degree flowchart
+     * @throws JSONException if there's an issue parsing the JSON data
+     */
+    public void loadDegreeFlowchart(JSONObject data) throws JSONException {
+<span class="fc" id="L87">        Context context = getApplicationContext();</span>
+<span class="fc" id="L88">        LinearLayout semesterContainer = findViewById(R.id.semesterContainer);</span>
+
+<span class="fc" id="L90">        JSONArray semesters = data.getJSONArray(&quot;semesters&quot;);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        for (int semesterIdx = 0; semesterIdx &lt; semesters.length(); semesterIdx++) {</span>
+<span class="fc" id="L92">            JSONObject semester = semesters.getJSONObject(semesterIdx);</span>
+
+<span class="fc" id="L94">            int semesterNumber = semester.getInt(&quot;semesterNumber&quot;);</span>
+<span class="fc" id="L95">            JSONArray requirementGroups = semester.getJSONArray(&quot;requirementGroups&quot;);</span>
+
+<span class="fc" id="L97">            LinearLayout requirementGroupContainer = new LinearLayout(context);</span>
+
+<span class="fc" id="L99">            TextView semesterNumberText = new TextView(context);</span>
+<span class="fc" id="L100">            semesterNumberText.setText(&quot;&quot; + semesterNumber);</span>
+<span class="fc" id="L101">            requirementGroupContainer.addView(semesterNumberText);</span>
+
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            for (int requirementGroupIdx = 0; requirementGroupIdx &lt; requirementGroups.length(); requirementGroupIdx++) {</span>
+<span class="fc" id="L104">                JSONObject requirementGroup = requirementGroups.getJSONObject(requirementGroupIdx);</span>
+
+<span class="fc" id="L106">                CardView courseView = (CardView) LayoutInflater.from(context).inflate(R.layout.fragment_course_button, null);</span>
+<span class="fc" id="L107">                TextView courseTitleText = (TextView)courseView.findViewById(R.id.courseTitleText);</span>
+<span class="fc" id="L108">                courseTitleText.setText(requirementGroup.getString(&quot;name&quot;));</span>
+
+<span class="fc" id="L110">                courseView.setOnClickListener(view -&gt; {</span>
+                    try {
+<span class="fc" id="L112">                        showCoursePop(requirementGroup);</span>
+<span class="nc" id="L113">                    } catch (JSONException e) {</span>
+<span class="nc" id="L114">                        e.printStackTrace();</span>
+<span class="fc" id="L115">                    }</span>
+<span class="fc" id="L116">                });</span>
+
+<span class="fc" id="L118">                requirementGroupContainer.addView(courseView);</span>
+            }
+
+<span class="fc" id="L121">            semesterContainer.addView(requirementGroupContainer);</span>
+        }
+<span class="fc" id="L123">    }</span>
+
+    /**
+     * Displays a pop-up for managing courses in the flowchart.
+     * @param requirementGroup The JSON data representing a group of course requirements
+     * @throws JSONException if there's an issue parsing the JSON data
+     */
+    public void showCoursePop(JSONObject requirementGroup) throws JSONException {
+<span class="fc" id="L131">        final String POPUP_LOGIN_TITLE=&quot;Add to Flowchart&quot;;</span>
+//        final String POPUP_LOGIN_TEXT=&quot;Please fill in your credentials&quot;;
+
+<span class="fc" id="L134">        AlertDialog.Builder alert = new AlertDialog.Builder(this);</span>
+
+<span class="fc" id="L136">        alert.setTitle(POPUP_LOGIN_TITLE);</span>
+//        alert.setMessage(POPUP_LOGIN_TEXT);
+
+        // Set an EditText view to get user input
+<span class="fc" id="L140">        final Spinner color = new Spinner(this);</span>
+        //A spinner is drop-down menu
+<span class="fc" id="L142">        ArrayAdapter&lt;String&gt; spinnerArrayAdapter = new ArrayAdapter&lt;String&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item,
+                new String[]{&quot;Add to Flowchart&quot;, &quot;Remove from Flowchart&quot;});
+<span class="fc" id="L145">        color.setAdapter(spinnerArrayAdapter);</span>
+<span class="fc" id="L146">        final Spinner semester = new Spinner(this);</span>
+<span class="fc" id="L147">        ArrayAdapter&lt;String&gt; semesterArrayAdapter = new ArrayAdapter&lt;String&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item,
+                new String[]{&quot;Semester 1&quot;, &quot;Semester 2&quot;, &quot;Semester 3&quot;,
+                &quot;Semester 4&quot;, &quot;Semester 5&quot;, &quot;Semester 6&quot;, &quot;Semester 7&quot;,
+                &quot;Semester 8&quot;});
+<span class="fc" id="L152">        semester.setAdapter(semesterArrayAdapter);</span>
+<span class="fc" id="L153">        final Spinner theme = new Spinner(this);</span>
+<span class="fc" id="L154">        System.out.println(requirementGroup);</span>
+<span class="fc" id="L155">        JSONArray courseArray = requirementGroup.getJSONArray(&quot;fulfillments&quot;);</span>
+<span class="fc" id="L156">        ArrayList&lt;String&gt; courseNameArray = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L157">        Map&lt;String, Long&gt; courseNameToIdMap = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        for (int i = 0; i &lt; courseArray.length(); i++) {</span>
+<span class="nc" id="L159">            JSONObject course = courseArray.getJSONObject(i).getJSONObject(&quot;course&quot;);</span>
+<span class="nc" id="L160">            String courseString = course.getJSONObject(&quot;courseDepartment&quot;)</span>
+<span class="nc" id="L161">                            .getString(&quot;departmentCode&quot;) + &quot; &quot;</span>
+<span class="nc" id="L162">                            + course.getString(&quot;courseNumber&quot;);</span>
+<span class="nc" id="L163">            courseNameToIdMap.put(courseString, course.getLong(&quot;courseId&quot;));</span>
+<span class="nc" id="L164">            courseNameArray.add(courseString);</span>
+<span class="nc" id="L165">            System.out.println(courseString);</span>
+        }
+<span class="fc" id="L167">        ArrayAdapter&lt;String&gt; courseArrayAdapter = new ArrayAdapter&lt;String&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item,
+<span class="fc" id="L169">                courseNameArray.toArray(new String[courseNameArray.size()]));</span>
+<span class="fc" id="L170">        theme.setAdapter(courseArrayAdapter);</span>
+
+
+
+<span class="fc" id="L174">        LinearLayout layout = new LinearLayout(getApplicationContext());</span>
+<span class="fc" id="L175">        layout.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="fc" id="L176">        layout.addView(color);</span>
+<span class="fc" id="L177">        layout.addView(theme);</span>
+<span class="fc" id="L178">        layout.addView(semester);</span>
+<span class="fc" id="L179">        alert.setView(layout);</span>
+<span class="fc" id="L180">        alert.setPositiveButton(&quot;Ok&quot;, new DialogInterface.OnClickListener() {</span>
+
+            public void onClick(DialogInterface dialog, int whichButton) {
+<span class="nc" id="L183">                Long courseId = courseNameToIdMap.get(theme.getSelectedItem().toString());</span>
+<span class="nc" id="L184">                Integer semesterNum = Integer.valueOf(semester.getSelectedItem().toString().substring(&quot;Semester &quot;.length()));</span>
+
+                try {
+<span class="nc" id="L187">                    String action = color.getSelectedItem().toString();</span>
+<span class="nc" id="L188">                    String baseUrl = MainActivity.getBaseURL();</span>
+
+                    Request request;
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                    if (action.equals(&quot;Add to Flowchart&quot;)) {</span>
+<span class="nc" id="L192">                        JSONObject body = new JSONObject();</span>
+<span class="nc" id="L193">                        JSONObject id = new JSONObject();</span>
+<span class="nc" id="L194">                        JSONObject course = new JSONObject();</span>
+<span class="nc" id="L195">                        JSONObject student = new JSONObject();</span>
+<span class="nc" id="L196">                        course.put(&quot;courseId&quot;, courseId);</span>
+<span class="nc" id="L197">                        student.put(&quot;universityId&quot;, studentId);</span>
+<span class="nc" id="L198">                        student.put(&quot;majors&quot;, new JSONArray());</span>
+<span class="nc" id="L199">                        student.put(&quot;minors&quot;, new JSONArray());</span>
+<span class="nc" id="L200">                        id.put(&quot;course&quot;, course);</span>
+<span class="nc" id="L201">                        id.put(&quot;student&quot;, student);</span>
+<span class="nc" id="L202">                        body.put(&quot;id&quot;, id);</span>
+<span class="nc" id="L203">                        body.put(&quot;semesterNumber&quot;, semesterNum);</span>
+
+<span class="nc" id="L205">                        request = new JsonObjectRequest(Request.Method.POST,</span>
+                                baseUrl + &quot;/hypothetical-course-registrations/&quot;,
+                                body,
+                                (JSONObject response) -&gt; {
+<span class="nc" id="L209">                                    System.out.println(&quot;The response is Added to flowchart: &quot; + response);</span>
+<span class="nc" id="L210">                                },</span>
+                                (VolleyError error) -&gt; {
+<span class="nc" id="L212">                                    System.out.println(&quot;The error is: &quot; + error);</span>
+<span class="nc" id="L213">                                }</span>
+                        );
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                    } else if (action.equals(&quot;Remove from Flowchart&quot;)) {</span>
+<span class="nc" id="L216">                        request = new StringRequest(Request.Method.DELETE,</span>
+                                baseUrl + &quot;/hypothetical-course-registrations/&quot; + courseId + &quot;/&quot; + studentId,
+                                (String response) -&gt; {
+<span class="nc" id="L219">                                    System.out.println(&quot;The response is Removed from Flowchart: &quot; + response);</span>
+<span class="nc" id="L220">                                },</span>
+                                (VolleyError error) -&gt; {
+<span class="nc" id="L222">                                    System.out.println(&quot;The error is: &quot; + error);</span>
+<span class="nc" id="L223">                                }</span>
+                        );
+<span class="nc" id="L225">                    } else throw new AssertionError();</span>
+
+                    // Do something with value!
+<span class="nc" id="L228">                    VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+<span class="nc" id="L229">                } catch (Exception e) {</span>
+<span class="nc" id="L230">                    e.printStackTrace();</span>
+<span class="nc" id="L231">                }</span>
+<span class="nc" id="L232">            }</span>
+        });
+
+
+<span class="fc" id="L236">        alert.setNegativeButton(&quot;Cancel&quot;, new DialogInterface.OnClickListener() {</span>
+
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+<span class="fc" id="L240">            }</span>
+        });
+
+<span class="fc" id="L243">        alert.show();</span>
+<span class="fc" id="L244">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

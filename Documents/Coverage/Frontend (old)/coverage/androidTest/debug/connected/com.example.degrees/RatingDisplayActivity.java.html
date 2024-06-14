@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RatingDisplayActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">RatingDisplayActivity.java</span></div><h1>RatingDisplayActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.os.Bundle;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * An activity to display course ratings retrieved from a specific course ID via an HTTP GET request.
+ */
+<span class="fc" id="L29">public class RatingDisplayActivity extends AppCompatActivity {</span>
+
+    private RecyclerView recyclerView;
+    private ArrayAdapter&lt;String&gt; adapter;
+<span class="fc" id="L33">    private OkHttpClient okHttpClient = new OkHttpClient();</span>
+    private static final String API_URL = &quot;http://coms-309-036.class.las.iastate.edu:8080/&quot;;
+    private Long courseId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L39">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L40">        setContentView(R.layout.activity_viewing_allratings);</span>
+
+<span class="fc" id="L42">        courseId = getIntent().getLongExtra(&quot;courseId&quot;, -1);</span>
+
+<span class="fc" id="L44">        recyclerView = findViewById(R.id.ratingRecyclerView);</span>
+<span class="fc" id="L45">        adapter = new ArrayAdapter&lt;&gt;(this, android.R.layout.simple_list_item_1);</span>
+<span class="fc" id="L46">        recyclerView.setAdapter(new CourseRatingsAdapter());</span>
+
+        // Make a GET request to retrieve course ratings
+<span class="fc" id="L49">        getCourseRatings();</span>
+<span class="fc" id="L50">    }</span>
+
+    /**
+     * Performs an HTTP GET request to fetch course ratings for the provided course ID.
+     */
+    private void getCourseRatings() {
+<span class="fc" id="L56">        Request request = new Request.Builder()</span>
+<span class="fc" id="L57">                .url(API_URL + &quot;/courses/&quot; + courseId + &quot;/ratings&quot;)</span>
+<span class="fc" id="L58">                .get()</span>
+<span class="fc" id="L59">                .build();</span>
+
+<span class="fc" id="L61">        okHttpClient.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L64">                e.printStackTrace();</span>
+<span class="nc" id="L65">                runOnUiThread(() -&gt; Toast.makeText(RatingDisplayActivity.this, &quot;Network request failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L66">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="fc" id="L71">                    String responseBody = response.body().string();</span>
+<span class="fc" id="L72">                    parseAndDisplayCourseRatings(responseBody);</span>
+<span class="fc" id="L73">                } else {</span>
+<span class="nc" id="L74">                    runOnUiThread(() -&gt; Toast.makeText(RatingDisplayActivity.this, &quot;Failed to retrieve course ratings&quot;, Toast.LENGTH_SHORT).show());</span>
+                }
+<span class="fc" id="L76">            }</span>
+        });
+<span class="fc" id="L78">    }</span>
+
+    /**
+     * Parses the received course ratings data and displays it on the view.
+     *
+     * @param responseBody The JSON data received as a response to the course ratings request.
+     */
+    private void parseAndDisplayCourseRatings(String responseBody) {
+        try {
+<span class="fc" id="L87">            JSONObject response = new JSONObject(responseBody);</span>
+<span class="fc" id="L88">            JSONArray courseRatings = response.getJSONArray(&quot;ratings&quot;);</span>
+<span class="fc" id="L89">            List&lt;String&gt; courseRatingsList = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            for (int i = 0; i &lt; courseRatings.length(); i++) {</span>
+<span class="fc" id="L92">                JSONObject courseRating = courseRatings.getJSONObject(i);</span>
+
+                // Construct the course rating item
+<span class="fc" id="L95">                String ratingText = &quot;Student ID: &quot; + courseRating.getJSONObject(&quot;id&quot;).getJSONObject(&quot;student&quot;).getLong(&quot;universityId&quot;) +</span>
+<span class="fc" id="L96">                        &quot;\nCourse ID: &quot; + courseRating.getJSONObject(&quot;id&quot;).getJSONObject(&quot;course&quot;).getInt(&quot;courseId&quot;) +</span>
+<span class="fc" id="L97">                        &quot;\nRating: &quot; + courseRating.getInt(&quot;rating&quot;) +</span>
+<span class="fc" id="L98">                        &quot;\nReview: &quot; + courseRating.getString(&quot;reviewText&quot;);</span>
+
+<span class="fc" id="L100">                courseRatingsList.add(ratingText);</span>
+            }
+
+<span class="fc" id="L103">            runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L104">                TextView disp = findViewById(R.id.courseRatingDisplay);</span>
+<span class="fc" id="L105">                disp.setText(String.join(&quot;\n\n&quot;, courseRatingsList));</span>
+//                adapter.clear();
+//                adapter.addAll(courseRatingsList);
+//                adapter.notifyDataSetChanged();
+<span class="fc" id="L109">            });</span>
+<span class="nc" id="L110">        } catch (JSONException e) {</span>
+<span class="nc" id="L111">            e.printStackTrace();</span>
+<span class="nc" id="L112">            runOnUiThread(() -&gt; Toast.makeText(RatingDisplayActivity.this, &quot;Failed to parse JSON response&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="fc" id="L113">        }</span>
+<span class="fc" id="L114">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

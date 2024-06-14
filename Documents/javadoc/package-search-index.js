@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.example.degrees"},{"l":"com.example.degrees.databinding"},{"l":"com.example.degrees.Websockets"}];updateSearchResults();

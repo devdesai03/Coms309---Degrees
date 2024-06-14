@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdvisorChatActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">AdvisorChatActivity.java</span></div><h1>AdvisorChatActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+
+import org.java_websocket.handshake.ServerHandshake;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+/**
+ * The AdvisorChatActivity manages the advisor's chat interface and functionalities,
+ * including WebSocket connections, message handling, and API interactions.
+ */
+<span class="fc" id="L32">public class AdvisorChatActivity extends AppCompatActivity implements WebSocketListener {</span>
+
+    // UI elements
+    private Button connectBtn, sendBtn, getBreakoutRoomsBtn, getOnlineUsersBtn, getChatHistoryBtn;
+    private EditText usernameEtx, msgEtx;
+    private TextView msgTv;
+<span class="fc" id="L38">    private List&lt;String&gt; chatHistory = new ArrayList&lt;&gt;();</span>
+
+
+    /**
+     * Initializes the advisor chat interface, sets UI elements, and configures listeners for buttons.
+     * Manages WebSocket connections and various API interactions to handle chat functionalities.
+     * @param savedInstanceState The saved state of the activity
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L48">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L49">        setContentView(R.layout.advisor_chat);</span>
+
+        // Initialize UI elements
+<span class="fc" id="L52">        connectBtn = findViewById(R.id.bt1);</span>
+<span class="fc" id="L53">        usernameEtx = findViewById(R.id.et1);</span>
+<span class="fc" id="L54">        getOnlineUsersBtn = findViewById(R.id.getOnlineUsersBtn);</span>
+<span class="fc" id="L55">        getBreakoutRoomsBtn = findViewById(R.id.getBreakoutRoomsBtn);</span>
+<span class="fc" id="L56">        getChatHistoryBtn = findViewById(R.id.getChatHistoryBtn);</span>
+<span class="fc" id="L57">        sendBtn = findViewById(R.id.bt2);</span>
+<span class="fc" id="L58">        msgEtx = findViewById(R.id.et2);</span>
+<span class="fc" id="L59">        msgTv = findViewById(R.id.tx1);</span>
+
+        // Initially hide room-related elements
+<span class="fc" id="L62">        getOnlineUsersBtn.setVisibility(View.GONE);</span>
+<span class="fc" id="L63">        getBreakoutRoomsBtn.setVisibility(View.GONE);</span>
+<span class="fc" id="L64">        getChatHistoryBtn.setVisibility(View.GONE);</span>
+<span class="fc" id="L65">        sendBtn.setVisibility(View.GONE);</span>
+<span class="fc" id="L66">        msgEtx.setVisibility(View.GONE);</span>
+<span class="fc" id="L67">        msgTv.setVisibility(View.GONE);</span>
+
+
+        // Connect button listener
+<span class="fc" id="L71">        connectBtn.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L72">            String username = usernameEtx.getText().toString();</span>
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (!username.isEmpty()) {</span>
+                // Save the username
+<span class="fc" id="L76">                saveUsername(username);</span>
+
+                // Hide username EditText, roomName EditText, and the Connect button
+<span class="fc" id="L79">                usernameEtx.setVisibility(View.GONE);</span>
+<span class="fc" id="L80">                connectBtn.setVisibility(View.GONE);</span>
+
+                //Show the other buttons
+<span class="fc" id="L83">                getOnlineUsersBtn.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L84">                getBreakoutRoomsBtn.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L85">                getChatHistoryBtn.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L86">                sendBtn.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L87">                msgEtx.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L88">                msgTv.setVisibility(View.VISIBLE);</span>
+
+                // Establish WebSocket connection with the username
+<span class="fc" id="L91">                String serverUrl = &quot;ws://coms-309-036.class.las.iastate.edu:8080/advisor-chat/&quot; + getSavedUsername();</span>
+<span class="fc" id="L92">                WebSocketManager.getInstance().connectWebSocket(serverUrl);</span>
+<span class="fc" id="L93">                WebSocketManager.getInstance().setWebSocketListener(AdvisorChatActivity.this);</span>
+            }
+<span class="fc" id="L95">        });</span>
+
+<span class="fc" id="L97">        sendBtn.setOnClickListener(v -&gt; {</span>
+<span class="fc" id="L98">            String message = msgEtx.getText().toString();</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            if (!message.isEmpty()) {</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">                if (message.startsWith(&quot;/join-room&quot;)) {</span>
+                    // Extract the room name from the message
+<span class="nc" id="L103">                    String roomName = message.substring(&quot;/join-room&quot;.length());</span>
+
+                    // Send a join room message to the backend via WebSocket
+<span class="nc" id="L106">                    String joinRoomMessage = &quot;/join-room &quot; + roomName;</span>
+<span class="nc" id="L107">                    WebSocketManager.getInstance().sendMessage(joinRoomMessage);</span>
+
+                    // Add the message to the chat history
+<span class="nc" id="L110">                    chatHistory.add(&quot;Joining breakout room: &quot; + roomName);</span>
+<span class="nc" id="L111">                } else {</span>
+                    // If the message doesn't start with &quot;/join-room &quot;, it's a regular chat message
+                    // Send the message to the backend via WebSocket
+<span class="fc" id="L114">                    WebSocketManager.getInstance().sendMessage(message);</span>
+
+                    // Add the message to the chat history
+                }
+
+                // Update the msgTv with the entire chat history
+<span class="fc" id="L120">                updateChatHistory();</span>
+
+                // Clear the input field
+<span class="fc" id="L123">                msgEtx.setText(&quot;&quot;);</span>
+            }
+<span class="fc" id="L125">        });</span>
+
+        // Get breakout rooms button listener
+<span class="fc" id="L128">        getBreakoutRoomsBtn.setOnClickListener(v -&gt; {</span>
+            // Send HTTP GET request to get a list of active rooms
+<span class="nc" id="L130">            sendHttpGetRequest(&quot;/availableBreakoutRooms&quot;);</span>
+<span class="nc" id="L131">        });</span>
+
+        // Get online users button listener
+<span class="fc" id="L134">        getOnlineUsersBtn.setOnClickListener(v -&gt; {</span>
+            // Send HTTP GET request to get a list of active users
+<span class="nc" id="L136">            sendHttpGetRequest(&quot;/onlineUsers&quot;);</span>
+<span class="nc" id="L137">        });</span>
+
+        // Get chat history button listener
+<span class="fc" id="L140">        getChatHistoryBtn.setOnClickListener(v -&gt; {</span>
+            // Send HTTP GET request to get chat history
+<span class="nc" id="L142">            sendHttpGetRequest(&quot;/chatHistory/&quot; + getSavedUsername());</span>
+<span class="nc" id="L143">        });</span>
+<span class="fc" id="L144">    }</span>
+
+
+    /**
+     * Updates the chat history displayed in the message TextView.
+     * Runs on the UI thread.
+     */
+    private void updateChatHistory() {
+<span class="fc" id="L152">        StringBuilder chatText = new StringBuilder();</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        for (String message : chatHistory) {</span>
+<span class="nc" id="L154">            chatText.append(message).append(&quot;\n&quot;);</span>
+<span class="nc" id="L155">        }</span>
+
+<span class="fc" id="L157">        runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L158">            msgTv.setText(chatText.toString());</span>
+<span class="fc" id="L159">        });</span>
+<span class="fc" id="L160">    }</span>
+
+    /**
+     * Saves the username in SharedPreferences.
+     * @param username The username to be saved
+     */
+    private void saveUsername(String username) {
+<span class="fc" id="L167">        SharedPreferences preferences = getSharedPreferences(&quot;MyPreferences&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L168">        SharedPreferences.Editor editor = preferences.edit();</span>
+<span class="fc" id="L169">        editor.putString(&quot;username&quot;, username);</span>
+<span class="fc" id="L170">        editor.apply();</span>
+<span class="fc" id="L171">    }</span>
+
+    /**
+     * Retrieves the saved username from SharedPreferences.
+     * @return The saved username, or an empty string if not found
+     */
+    private String getSavedUsername() {
+<span class="fc" id="L178">        SharedPreferences preferences = getSharedPreferences(&quot;MyPreferences&quot;, MODE_PRIVATE);</span>
+<span class="fc" id="L179">        return preferences.getString(&quot;username&quot;,&quot;&quot;); // &quot;&quot; is the default value if the username is not found</span>
+    }
+
+    // Append a message to the chat area
+    private void appendMessageToChat(String message) {
+<span class="nc" id="L184">        runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L185">            String currentText = msgTv.getText().toString();</span>
+            //ADD NEW LINE IN THE MIDDLE OF &quot;&quot; TO SHOW MULIPLE MESSAGES
+<span class="nc" id="L187">            msgTv.setText(currentText + &quot;&quot; + message);</span>
+<span class="nc" id="L188">        });</span>
+<span class="nc" id="L189">    }</span>
+
+    private void fetchChatHistory() {
+<span class="nc" id="L192">        OkHttpClient client = new OkHttpClient();</span>
+<span class="nc" id="L193">        String baseUrl = &quot;http://coms-309-036.class.las.iastate.edu:8080&quot;; // Replace with your API URL</span>
+
+<span class="nc" id="L195">        Request request = new Request.Builder()</span>
+<span class="nc" id="L196">                .url(baseUrl + &quot;/chatHistory/&quot; + getSavedUsername())</span>
+<span class="nc" id="L197">                .get()</span>
+<span class="nc" id="L198">                .build();</span>
+
+<span class="nc" id="L200">        client.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L203">                e.printStackTrace();</span>
+<span class="nc" id="L204">                runOnUiThread(() -&gt; {</span>
+                    // Handle network errors here
+                    // You can update the UI to show an error message
+<span class="nc" id="L207">                });</span>
+<span class="nc" id="L208">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L213">                    final String responseData = response.body().string();</span>
+<span class="nc" id="L214">                    runOnUiThread(() -&gt; {</span>
+                        // Handle a successful response, e.g., update the UI with chat history data
+<span class="nc" id="L216">                        msgTv.setText(responseData);</span>
+<span class="nc" id="L217">                    });</span>
+<span class="nc" id="L218">                } else {</span>
+<span class="nc" id="L219">                    runOnUiThread(() -&gt; {</span>
+                        // Handle errors, e.g., show an error message
+<span class="nc" id="L221">                        msgTv.setText(&quot;Error: &quot; + response.message());</span>
+<span class="nc" id="L222">                    });</span>
+                }
+<span class="nc" id="L224">            }</span>
+        });
+<span class="nc" id="L226">    }</span>
+
+    private void fetchOnlineUsers() {
+<span class="nc" id="L229">        OkHttpClient client = new OkHttpClient();</span>
+<span class="nc" id="L230">        String baseUrl = &quot;http://coms-309-036.class.las.iastate.edu:8080&quot;; // Replace with your API URL</span>
+
+<span class="nc" id="L232">        Request request = new Request.Builder()</span>
+<span class="nc" id="L233">                .url(baseUrl + &quot;/onlineUsers&quot;)</span>
+<span class="nc" id="L234">                .get()</span>
+<span class="nc" id="L235">                .build();</span>
+
+<span class="nc" id="L237">        client.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L240">                e.printStackTrace();</span>
+<span class="nc" id="L241">                runOnUiThread(() -&gt; {</span>
+                    // Handle network errors here
+                    // You can update the UI to show an error message
+<span class="nc" id="L244">                });</span>
+<span class="nc" id="L245">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L250">                    final String responseData = response.body().string();</span>
+<span class="nc" id="L251">                    runOnUiThread(() -&gt; {</span>
+                        // Handle a successful response, e.g., update the UI with online users data
+<span class="nc" id="L253">                        msgTv.setText(responseData);</span>
+<span class="nc" id="L254">                    });</span>
+<span class="nc" id="L255">                } else {</span>
+<span class="nc" id="L256">                    runOnUiThread(() -&gt; {</span>
+                        // Handle errors, e.g., show an error message
+<span class="nc" id="L258">                        msgTv.setText(&quot;Error: &quot; + response.message());</span>
+<span class="nc" id="L259">                    });</span>
+                }
+<span class="nc" id="L261">            }</span>
+        });
+<span class="nc" id="L263">    }</span>
+
+    private void fetchBreakoutRooms() {
+<span class="nc" id="L266">        OkHttpClient client = new OkHttpClient();</span>
+<span class="nc" id="L267">        String baseUrl = &quot;http://coms-309-036.class.las.iastate.edu:8080&quot;; // Replace with your API URL</span>
+
+<span class="nc" id="L269">        Request request = new Request.Builder()</span>
+<span class="nc" id="L270">                .url(baseUrl + &quot;/availableBreakoutRooms&quot;)</span>
+<span class="nc" id="L271">                .get()</span>
+<span class="nc" id="L272">                .build();</span>
+
+<span class="nc" id="L274">        client.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L277">                e.printStackTrace();</span>
+<span class="nc" id="L278">                runOnUiThread(() -&gt; {</span>
+                    // Handle network errors here
+                    // You can update the UI to show an error message
+<span class="nc" id="L281">                });</span>
+<span class="nc" id="L282">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L286" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L287">                    final String responseData = response.body().string();</span>
+<span class="nc" id="L288">                    runOnUiThread(() -&gt; {</span>
+                        // Handle a successful response, e.g., update the UI with breakout room data
+<span class="nc" id="L290">                        msgTv.setText(responseData);</span>
+<span class="nc" id="L291">                    });</span>
+<span class="nc" id="L292">                } else {</span>
+<span class="nc" id="L293">                    runOnUiThread(() -&gt; {</span>
+                        // Handle errors, e.g., show an error message
+<span class="nc" id="L295">                        msgTv.setText(&quot;Error: &quot; + response.message());</span>
+<span class="nc" id="L296">                    });</span>
+                }
+<span class="nc" id="L298">            }</span>
+        });
+<span class="nc" id="L300">    }</span>
+
+    private void sendHttpGetRequest(String endpoint) {
+        // Replace with your actual server URL
+<span class="nc" id="L304">        String baseUrl = &quot;http://coms-309-036.class.las.iastate.edu:8080&quot;;</span>
+
+        // Create an OkHttpClient instance
+<span class="nc" id="L307">        OkHttpClient client = new OkHttpClient();</span>
+
+        // Build the request
+<span class="nc" id="L310">        Request request = new Request.Builder()</span>
+<span class="nc" id="L311">                .url(baseUrl + endpoint)</span>
+<span class="nc" id="L312">                .get()</span>
+<span class="nc" id="L313">                .build();</span>
+
+        // Send the request asynchronously
+<span class="nc" id="L316">        client.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Handle network errors here
+<span class="nc" id="L320">                e.printStackTrace();</span>
+<span class="nc" id="L321">                runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L322">                    msgTv.setText(&quot;Network error: &quot; + e.getMessage());</span>
+<span class="nc" id="L323">                });</span>
+<span class="nc" id="L324">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L328" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L329">                    final String responseData = response.body().string();</span>
+<span class="nc" id="L330">                    runOnUiThread(() -&gt; {</span>
+                        // Handle a successful response, e.g., display data in the UI
+<span class="nc" id="L332">                        msgTv.setText(responseData);</span>
+<span class="nc" id="L333">                    });</span>
+<span class="nc" id="L334">                } else {</span>
+<span class="nc" id="L335">                    runOnUiThread(() -&gt; {</span>
+                        // Handle errors, e.g., show an error message
+<span class="nc" id="L337">                        msgTv.setText(&quot;Error: &quot; + response.message());</span>
+<span class="nc" id="L338">                    });</span>
+                }
+<span class="nc" id="L340">            }</span>
+        });
+<span class="nc" id="L342">    }</span>
+
+    /**
+     * Handles the message received via WebSocket and updates the chat area.
+     * Runs on the UI thread.
+     * @param message The message received via WebSocket
+     */
+    @Override
+    public void onWebSocketMessage(String message) {
+<span class="fc" id="L351">        runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L352">            String s = msgTv.getText().toString();</span>
+<span class="fc" id="L353">            msgTv.setText(s + &quot;\n&quot; + message);</span>
+<span class="fc" id="L354">        });</span>
+<span class="fc" id="L355">    }</span>
+
+
+    /**
+     * Handles the WebSocket close event, updating the UI with the reason and closure initiator.
+     * Runs on the UI thread.
+     * @param code The code indicating the reason for closure
+     * @param reason The reason for closure
+     * @param remote Indicates if the closure was initiated remotely
+     */
+    @Override
+    public void onWebSocketClose(int code, String reason, boolean remote) {
+<span class="nc bnc" id="L367" title="All 2 branches missed.">        String closedBy = remote ? &quot;server&quot; : &quot;local&quot;;</span>
+<span class="nc" id="L368">        runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L369">            String s = msgTv.getText().toString();</span>
+<span class="nc" id="L370">            msgTv.setText(s + &quot;---\nconnection closed by &quot; + closedBy + &quot;\nreason: &quot; + reason);</span>
+<span class="nc" id="L371">        });</span>
+<span class="nc" id="L372">    }</span>
+
+    /**
+     * Handles the WebSocket open event.
+     * If a room is specified, joins the room via WebSocket.
+     * @param handshakedata Information related to the handshake
+     */
+    @Override
+    public void onWebSocketOpen(ServerHandshake handshakedata) {
+        // Handle WebSocket open event
+<span class="fc" id="L382">        String room = this.getIntent().getStringExtra(&quot;goToRoom&quot;);</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">        if (room != null) {</span>
+<span class="nc" id="L384">            WebSocketManager.getInstance().sendMessage(&quot;/join-room &quot; + room);</span>
+        }
+<span class="fc" id="L386">    }</span>
+
+    /**
+     * Handles WebSocket errors if they occur.
+     * @param ex The encountered exception
+     */
+    @Override
+    public void onWebSocketError(Exception ex) {
+        // Handle WebSocket error
+<span class="nc" id="L395">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

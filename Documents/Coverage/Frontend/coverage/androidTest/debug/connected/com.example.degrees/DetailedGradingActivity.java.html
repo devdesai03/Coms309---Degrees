@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DetailedGradingActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">DetailedGradingActivity.java</span></div><h1>DetailedGradingActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import java.io.IOException;
+
+<span class="nc" id="L23">public class DetailedGradingActivity extends AppCompatActivity {</span>
+
+    private TextView currentGradeTextView;
+    private EditText gradeEditText;
+
+    private static final String BASE_URL = &quot;http://coms-309-036.class.las.iastate.edu:8080/&quot;;
+
+<span class="nc" id="L30">    private OkHttpClient okHttpClient = new OkHttpClient();</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L34">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L35">        setContentView(R.layout.activity_detailed_grading);</span>
+
+<span class="nc" id="L37">        currentGradeTextView = findViewById(R.id.currentGradeTextView);</span>
+<span class="nc" id="L38">        gradeEditText = findViewById(R.id.gradeEditText);</span>
+
+        // Retrieve the current grade from the intent
+<span class="nc" id="L41">        String currentGrade = getIntent().getStringExtra(&quot;grade&quot;);</span>
+<span class="nc" id="L42">        currentGradeTextView.setText(currentGrade);</span>
+
+<span class="nc" id="L44">        findViewById(R.id.assignGradeButton).setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View v) {
+<span class="nc" id="L47">                assignNewGrade();</span>
+<span class="nc" id="L48">            }</span>
+        });
+<span class="nc" id="L50">    }</span>
+
+    private void assignNewGrade() {
+<span class="nc" id="L53">        String newGrade = gradeEditText.getText().toString().trim();</span>
+
+        // Validate the new grade (add your validation logic)
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (newGrade.isEmpty()) {</span>
+<span class="nc" id="L57">            Toast.makeText(this, &quot;Please enter a new grade&quot;, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L58">            return;</span>
+        }
+
+        // Get universityId and sectionId from your data source (Intent, SharedPreferences, etc.)
+<span class="nc" id="L62">        long universityId = getUniversityId();</span>
+<span class="nc" id="L63">        long sectionId = getSectionId();</span>
+
+        // Prepare the PUT request body
+<span class="nc" id="L66">        MediaType mediaType = MediaType.parse(&quot;application/json; charset=utf-8&quot;);</span>
+<span class="nc" id="L67">        String requestBodyJson = &quot;{ \&quot;grade\&quot;: \&quot;&quot; + newGrade + &quot;\&quot; }&quot;;</span>
+<span class="nc" id="L68">        RequestBody requestBody = RequestBody.create(mediaType, requestBodyJson);</span>
+
+        // Create the PUT request
+<span class="nc" id="L71">        Request request = new Request.Builder()</span>
+<span class="nc" id="L72">                .url(BASE_URL + &quot;updateGrade/&quot; + universityId + &quot;/&quot; + sectionId + &quot;?newGrade= &quot; + newGrade)</span>
+<span class="nc" id="L73">                .put(requestBody)</span>
+<span class="nc" id="L74">                .build();</span>
+<span class="nc" id="L75">        Log.d(&quot;DetailedGradingActivity&quot;, &quot;UniversityId: &quot; + universityId + &quot;, SectionId: &quot; + sectionId);</span>
+
+        // Execute the PUT request
+<span class="nc" id="L78">        okHttpClient.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L81">                e.printStackTrace();</span>
+<span class="nc" id="L82">                runOnUiThread(() -&gt; showToast(&quot;Failed to update grade&quot;));</span>
+<span class="nc" id="L83">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L88">                    runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L89">                        showToast(&quot;Grade updated successfully&quot;);</span>
+                        // You may finish the activity or perform other actions
+<span class="nc" id="L91">                        finish();</span>
+<span class="nc" id="L92">                    });</span>
+                } else {
+<span class="nc" id="L94">                    runOnUiThread(() -&gt; showToast(&quot;Failed to update grade. Server Error: &quot; + response.code()));</span>
+                }
+<span class="nc" id="L96">            }</span>
+        });
+<span class="nc" id="L98">    }</span>
+
+    private long getUniversityId() {
+<span class="nc" id="L101">        Intent intent = getIntent();</span>
+<span class="nc bnc" id="L102" title="All 4 branches missed.">        if (intent != null &amp;&amp; intent.hasExtra(&quot;universityId&quot;)) {</span>
+<span class="nc" id="L103">            return intent.getLongExtra(&quot;universityId&quot;, -1);</span>
+        }
+<span class="nc" id="L105">        return -1;</span>
+    }
+
+    private long getSectionId() {
+<span class="nc" id="L109">        Intent intent = getIntent();</span>
+<span class="nc bnc" id="L110" title="All 4 branches missed.">        if (intent != null &amp;&amp; intent.hasExtra(&quot;sectionId&quot;)) {</span>
+<span class="nc" id="L111">            return intent.getLongExtra(&quot;sectionId&quot;, -1);</span>
+        }
+<span class="nc" id="L113">        return -1;</span>
+    }
+
+
+    private void showToast(String message) {
+<span class="nc" id="L118">        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();</span>
+<span class="nc" id="L119">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

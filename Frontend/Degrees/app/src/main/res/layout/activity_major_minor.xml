@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/Cornsilk"
+    android:padding="16dp"
+    tools:context=".MajorMinorActivity">
+
+    <!-- Views for displaying current major and minor -->
+    <TextView
+        android:id="@+id/textViewCurrentMajor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current Major: "
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/currentMajor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="24sp"/>
+
+    <TextView
+        android:id="@+id/textViewCurrentMinor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Current Minor: "
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/currentMinor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="24sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Button to change major/minor -->
+    <Button
+        android:id="@+id/changeMajorMinorButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Change Major/Minor"
+        android:onClick="onChangeMajorMinorClick" />
+
+    <!-- Initial layout -->
+    <LinearLayout
+        android:id="@+id/initialLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Dropdown layout -->
+        <LinearLayout
+            android:id="@+id/dropdownLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Spinner for selecting major -->
+            <Spinner
+                android:id="@+id/majorSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"/>
+
+            <!-- Spinner for selecting minor -->
+            <Spinner
+                android:id="@+id/minorSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"/>
+
+            <!-- Button to save the changes -->
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:onClick="onSaveButtonClick"
+                android:layout_marginTop="16dp"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

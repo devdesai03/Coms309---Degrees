@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>advisorAppointmentView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">advisorAppointmentView.java</span></div><h1>advisorAppointmentView.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+<span class="nc" id="L21">public class advisorAppointmentView extends AppCompatActivity {</span>
+
+    private ListView listView;
+    private ArrayAdapter&lt;String&gt; adapter;
+<span class="nc" id="L25">    private OkHttpClient okHttpClient = new OkHttpClient();</span>
+<span class="nc" id="L26">    private static String advisorId = &quot;60&quot;; // Set the advisorId</span>
+<span class="nc" id="L27">    private static final String API_URL = &quot;http://coms-309-036.class.las.iastate.edu:8080/appointments/advisor/&quot; + advisorId + &quot;/timeRange&quot;;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L31">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L32">        setContentView(R.layout.advisor_screen_to_see_studentappointments);</span>
+
+<span class="nc" id="L34">        listView = findViewById(R.id.listViewStudentAppointments);</span>
+<span class="nc" id="L35">        adapter = new ArrayAdapter&lt;&gt;(this, android.R.layout.simple_list_item_1);</span>
+<span class="nc" id="L36">        listView.setAdapter(adapter);</span>
+
+<span class="nc" id="L38">        Button showButton = findViewById(R.id.btnShowAppointments);</span>
+<span class="nc" id="L39">        showButton.setOnClickListener(v -&gt; getAppointments());</span>
+
+        // Make a GET request to retrieve appointments
+<span class="nc" id="L42">        getAppointments();</span>
+<span class="nc" id="L43">    }</span>
+
+    // GET request to retrieve appointments
+    private void getAppointments() {
+<span class="nc" id="L47">        Request request = new Request.Builder()</span>
+<span class="nc" id="L48">                .url(API_URL)</span>
+<span class="nc" id="L49">                .get()</span>
+<span class="nc" id="L50">                .build();</span>
+
+<span class="nc" id="L52">        okHttpClient.newCall(request).enqueue(new Callback() {</span>
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+<span class="nc" id="L56">                e.printStackTrace();</span>
+<span class="nc" id="L57">                runOnUiThread(() -&gt; Toast.makeText(advisorAppointmentView.this, &quot;Network request failed&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L58">            }</span>
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L63">                    String responseBody = response.body().string();</span>
+<span class="nc" id="L64">                    parseAndDisplayAppointments(responseBody);</span>
+<span class="nc" id="L65">                } else {</span>
+<span class="nc" id="L66">                    System.out.println(response);</span>
+<span class="nc" id="L67">                    runOnUiThread(() -&gt; Toast.makeText(advisorAppointmentView.this, &quot;Failed to retrieve appointments&quot;, Toast.LENGTH_SHORT).show());</span>
+                }
+<span class="nc" id="L69">            }</span>
+        });
+<span class="nc" id="L71">    }</span>
+
+    private void parseAndDisplayAppointments(String responseBody) {
+        try {
+<span class="nc" id="L75">            JSONArray appointmentsArray = new JSONArray(responseBody);</span>
+<span class="nc" id="L76">            List&lt;String&gt; appointmentDetails = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (int i = 0; i &lt; appointmentsArray.length(); i++) {</span>
+<span class="nc" id="L79">                JSONObject appointmentObject = appointmentsArray.getJSONObject(i);</span>
+
+<span class="nc" id="L81">                int appointmentId = appointmentObject.getInt(&quot;id&quot;);</span>
+
+                // Parsing student details
+<span class="nc" id="L84">                JSONObject studentObject = appointmentObject.getJSONObject(&quot;student&quot;);</span>
+<span class="nc" id="L85">                JSONObject isuRegistrationObject = studentObject.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="nc" id="L86">                JSONObject userObject = isuRegistrationObject.getJSONObject(&quot;user&quot;);</span>
+
+<span class="nc" id="L88">                String studentName = userObject.getString(&quot;userName&quot;);</span>
+<span class="nc" id="L89">                String studentEmail = userObject.getString(&quot;userEmail&quot;);</span>
+<span class="nc" id="L90">                String studentAddress = userObject.getString(&quot;userAddress&quot;);</span>
+<span class="nc" id="L91">                String studentPhoneNumber = userObject.getString(&quot;phoneNumber&quot;);</span>
+
+                // Parsing advisor details
+<span class="nc" id="L94">                JSONObject advisorObject = appointmentObject.getJSONObject(&quot;advisor&quot;);</span>
+<span class="nc" id="L95">                JSONObject advisorIsuRegistrationObject = advisorObject.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="nc" id="L96">                JSONObject advisorUserObject = advisorIsuRegistrationObject.getJSONObject(&quot;user&quot;);</span>
+
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                String advisorName = advisorUserObject.isNull(&quot;userName&quot;) ? &quot;&quot; : advisorUserObject.getString(&quot;userName&quot;);</span>
+<span class="nc" id="L99">                String advisorEmail = advisorUserObject.getString(&quot;userEmail&quot;);</span>
+<span class="nc" id="L100">                String advisorAddress = advisorUserObject.getString(&quot;userAddress&quot;);</span>
+<span class="nc" id="L101">                String advisorPhoneNumber = advisorUserObject.getString(&quot;phoneNumber&quot;);</span>
+
+<span class="nc" id="L103">                String startTime = appointmentObject.getString(&quot;startTime&quot;);</span>
+<span class="nc" id="L104">                String endTime = appointmentObject.getString(&quot;endTime&quot;);</span>
+<span class="nc" id="L105">                String description = appointmentObject.getString(&quot;description&quot;);</span>
+
+                // Construct the appointment details string
+<span class="nc" id="L108">                String appointmentDetailsString =</span>
+                        &quot;Appointment ID: &quot; + appointmentId +
+                                &quot;\nStudent Name: &quot; + studentName +
+                                &quot;\nStudent Email: &quot; + studentEmail +
+                                &quot;\nStudent Address: &quot; + studentAddress +
+                                &quot;\nStudent Phone Number: &quot; + studentPhoneNumber +
+                                &quot;\nAdvisor Name: &quot; + advisorName +
+                                &quot;\nAdvisor Email: &quot; + advisorEmail +
+                                &quot;\nAdvisor Address: &quot; + advisorAddress +
+                                &quot;\nAdvisor Phone Number: &quot; + advisorPhoneNumber +
+                                &quot;\nStart Time: &quot; + startTime +
+                                &quot;\nEnd Time: &quot; + endTime +
+                                &quot;\nDescription: &quot; + description;
+
+<span class="nc" id="L122">                appointmentDetails.add(appointmentDetailsString);</span>
+            }
+
+            // Update UI on the main thread
+<span class="nc" id="L126">            runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L127">                adapter.clear();</span>
+<span class="nc" id="L128">                adapter.addAll(appointmentDetails);</span>
+<span class="nc" id="L129">                adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L130">            });</span>
+<span class="nc" id="L131">        } catch (JSONException e) {</span>
+<span class="nc" id="L132">            e.printStackTrace();</span>
+<span class="nc" id="L133">            runOnUiThread(() -&gt; Toast.makeText(advisorAppointmentView.this, &quot;Failed to parse JSON response&quot;, Toast.LENGTH_SHORT).show());</span>
+<span class="nc" id="L134">        }</span>
+<span class="nc" id="L135">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

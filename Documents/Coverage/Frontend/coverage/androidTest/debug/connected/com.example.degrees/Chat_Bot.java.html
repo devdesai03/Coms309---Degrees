@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Chat_Bot.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">Chat_Bot.java</span></div><h1>Chat_Bot.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.degrees.Websockets.WebSocketListener;
+import com.example.degrees.Websockets.WebSocketManager;
+
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Text;
+/**
+* This class is an AI chat which uses a web socket.
+ */
+
+<span class="fc" id="L30">public class Chat_Bot extends AppCompatActivity implements WebSocketListener {</span>
+
+<span class="fc" id="L32">    private String BASE_URL = &quot;ws://coms-309-036.class.las.iastate.edu:8080/aiChat/&quot;;</span>
+
+    private Button connectBtn, sendBtn;
+    private EditText msgEtx;
+    private TextView msgTv;
+    private LinearLayout messagesContainer;
+
+    private ScrollView messagesScrollView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        //onCreate is where all the initialization happens
+<span class="fc" id="L44">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L45">        setContentView(R.layout.activity_chat_bot);</span>
+
+        /* initialize UI elements */
+<span class="fc" id="L48">        connectBtn = (Button) findViewById(R.id.bt1);</span>
+<span class="fc" id="L49">        sendBtn = (Button) findViewById(R.id.bt2);</span>
+<span class="fc" id="L50">        msgEtx = (EditText) findViewById(R.id.et2);</span>
+<span class="fc" id="L51">        msgTv = (TextView) findViewById(R.id.tx1);</span>
+<span class="fc" id="L52">        messagesContainer = findViewById(R.id.messagesContainer);</span>
+<span class="fc" id="L53">        messagesScrollView = findViewById(R.id.messagesScrollView);</span>
+
+        /* connect button listener */
+<span class="fc" id="L56">        connectBtn.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L57">            String serverUrl = BASE_URL + DashboardActivity.getUserid();</span>
+
+            // Establish WebSocket connection and set listener
+<span class="fc" id="L60">            WebSocketManager.getInstance().connectWebSocket(serverUrl);</span>
+<span class="fc" id="L61">            WebSocketManager.getInstance().setWebSocketListener(Chat_Bot.this);</span>
+<span class="fc" id="L62">        });</span>
+
+        /* send button listener */
+<span class="fc" id="L65">        sendBtn.setOnClickListener(v -&gt; {</span>
+            try {
+
+                // send message
+<span class="fc" id="L69">                WebSocketManager.getInstance().sendMessage(msgEtx.getText().toString());</span>
+<span class="fc" id="L70">                displayOwnMessage(msgEtx.getText().toString());</span>
+<span class="nc" id="L71">            } catch (Exception e) {</span>
+<span class="nc" id="L72">                Log.d(&quot;ExceptionSendMessage:&quot;, e.getMessage().toString());</span>
+<span class="fc" id="L73">            }</span>
+<span class="fc" id="L74">        });</span>
+<span class="fc" id="L75">    }</span>
+
+    private void displayOwnMessage(String message) {
+<span class="fc" id="L78">        runOnUiThread(() -&gt; {</span>
+<span class="fc" id="L79">            Context context = getApplicationContext();</span>
+
+<span class="fc" id="L81">            LinearLayout ownMessageBox = new LinearLayout(context);</span>
+<span class="fc" id="L82">            ownMessageBox.setOrientation(LinearLayout.VERTICAL);</span>
+
+<span class="fc" id="L84">            TextView ownMessageText = new TextView(context);</span>
+<span class="fc" id="L85">            ownMessageText.setText(message);</span>
+<span class="fc" id="L86">            ownMessageText.setTextColor(ContextCompat.getColor(context, R.color.WhiteSmoke));</span>
+
+<span class="fc" id="L88">            ownMessageBox.addView(ownMessageText);</span>
+
+<span class="fc" id="L90">            ownMessageBox.setBackgroundColor(ContextCompat.getColor(context, R.color.Black));</span>
+<span class="fc" id="L91">            messagesContainer.addView(ownMessageBox);</span>
+
+<span class="fc" id="L93">            messagesScrollView.post(() -&gt; messagesScrollView.fullScroll(View.FOCUS_DOWN));</span>
+<span class="fc" id="L94">        });</span>
+<span class="fc" id="L95">    }</span>
+
+
+    /**
+     * Handles the incoming WebSocket messages.The 'runOnUiThread' method is used to post a runnable
+     * to the UI thread's message queue, allowing UI updates to occur safely from a background
+     * or non-UI thread.
+     */
+
+    @Override
+    public void onWebSocketMessage(String message) {
+<span class="fc" id="L106">        runOnUiThread(() -&gt; {</span>
+            try {
+<span class="fc" id="L108">                Context context = getApplicationContext();</span>
+
+
+//            String s = msgTv.getText().toString();
+<span class="fc" id="L112">                JSONObject response = new JSONObject(message);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                if (!response.isNull(&quot;text&quot;)) {</span>
+<span class="fc" id="L114">                    LinearLayout messageBox = new LinearLayout(context);</span>
+<span class="fc" id="L115">                    messageBox.setOrientation(LinearLayout.VERTICAL);</span>
+
+<span class="fc" id="L117">                    messageBox.setBackgroundColor(ContextCompat.getColor(context, R.color.WhiteSmoke)); // Set the background color</span>
+
+//                messageBox.setVisibility(View.VISIBLE);
+
+
+<span class="fc" id="L122">                    TextView messageText = new TextView(context);</span>
+<span class="fc" id="L123">                    messageText.setText(response.getString(&quot;text&quot;));</span>
+<span class="fc" id="L124">                    messageText.setTextColor(ContextCompat.getColor(context, R.color.Black));</span>
+<span class="fc" id="L125">                    messageBox.addView(messageText);</span>
+
+<span class="fc" id="L127">                    JSONArray recommendedPrompts = response.getJSONArray(&quot;recommendedPrompts&quot;);</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">                    for (int i = 0; i &lt; recommendedPrompts.length(); i++) {</span>
+<span class="fc" id="L129">                        String buttonText = recommendedPrompts.getString(i);</span>
+<span class="fc" id="L130">                        Button button = new Button(context);</span>
+<span class="fc" id="L131">                        button.setText(buttonText);</span>
+
+<span class="fc" id="L133">                        button.setOnClickListener((view) -&gt; {</span>
+<span class="fc" id="L134">                            WebSocketManager.getInstance().sendMessage(buttonText);</span>
+<span class="fc" id="L135">                            displayOwnMessage(buttonText);</span>
+<span class="fc" id="L136">                        });</span>
+
+<span class="fc" id="L138">                        messageBox.addView(button);</span>
+                    }
+
+<span class="fc" id="L141">                    messagesContainer.addView(messageBox);</span>
+
+<span class="fc" id="L143">                    messagesScrollView.post(() -&gt; messagesScrollView.fullScroll(View.FOCUS_DOWN));</span>
+                }
+
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                if (!response.isNull(&quot;clientAction&quot;)) {</span>
+<span class="fc" id="L147">                    JSONArray clientAction = response.getJSONArray(&quot;clientAction&quot;);</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                    if (clientAction.getString(0).equals(&quot;toAdvisorChat&quot;)) {</span>
+<span class="fc" id="L149">                        Intent intent = new Intent(Chat_Bot.this, AdvisorChatActivity.class);</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">                        if (clientAction.length() &gt; 1) {</span>
+<span class="nc" id="L151">                            intent.putExtra(&quot;goToRoom&quot;, clientAction.getString(1));</span>
+                        }
+<span class="fc" id="L153">                        startActivity(intent);</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                    } else if (clientAction.getString(0).equals(&quot;goToAcademicPlan&quot;)) {</span>
+<span class="fc" id="L155">                        Intent intent = new Intent(Chat_Bot.this, FourYearPlannerActivity.class);</span>
+<span class="fc" id="L156">                        startActivity(intent);</span>
+                    }
+                }
+
+//            msgTv.setText(s + &quot;\n&quot;+message);
+<span class="nc" id="L161">            } catch (JSONException e) {</span>
+<span class="nc" id="L162">                e.printStackTrace(System.out);</span>
+<span class="fc" id="L163">            }</span>
+<span class="fc" id="L164">        });</span>
+<span class="fc" id="L165">    }</span>
+/**
+ * Callback method invoked when the WebSocket connection has been closed.
+ */
+    @Override
+    public void onWebSocketClose(int code, String reason, boolean remote) {
+<span class="nc bnc" id="L171" title="All 2 branches missed.">        String closedBy = remote ? &quot;server&quot; : &quot;local&quot;;</span>
+<span class="nc" id="L172">        runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L173">            String s = msgTv.getText().toString();</span>
+<span class="nc" id="L174">            msgTv.setText(s + &quot;---\nconnection closed by &quot; + closedBy + &quot;\nreason: &quot; + reason);</span>
+<span class="nc" id="L175">        });</span>
+<span class="nc" id="L176">    }</span>
+/**
+ * Callback method invoked when the WebSocket connection has been established.
+ */
+    @Override
+<span class="fc" id="L181">    public void onWebSocketOpen(ServerHandshake handshakedata) {}</span>
+
+/**
+ * Callback method that is invoked when a WebSocket error occurs.
+ */
+    @Override
+<span class="nc" id="L187">    public void onWebSocketError(Exception ex) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

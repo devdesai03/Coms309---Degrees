@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>bookAppointment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">bookAppointment.java</span></div><h1>bookAppointment.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.snackbar.Snackbar;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+
+<span class="fc" id="L28">public class bookAppointment extends AppCompatActivity {</span>
+
+    Long studentId;
+
+<span class="fc" id="L32">    Long advisorId = null;</span>
+
+    LocalDate selecteddate;
+    LocalTime selectedStartTime;
+    LocalTime selectedEndTime;
+
+    Button dateButtonView;
+    Button startTimeButton;
+    Button endTimeButton;
+    TextView descriptionView;
+    TextView advisorNameView;
+
+    public void snackbarMsg(View parent, String message) {
+<span class="fc" id="L45">        Snackbar snackbar =</span>
+<span class="fc" id="L46">                Snackbar.make(parent, message,</span>
+                        Snackbar.LENGTH_LONG );
+<span class="fc" id="L48">        snackbar.show();</span>
+<span class="fc" id="L49">    };</span>
+
+    public void setSelectedDate( LocalDate selecteddate){
+<span class="fc" id="L52">        this.selecteddate = selecteddate;</span>
+<span class="fc" id="L53">        String text = selecteddate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL));</span>
+<span class="fc" id="L54">        dateButtonView.setText(text);</span>
+<span class="fc" id="L55">    }</span>
+
+    public void setSelectedTimes(LocalTime startTime, LocalTime endTime) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (startTime != null) {</span>
+<span class="fc" id="L59">            this.selectedStartTime = startTime;</span>
+<span class="fc" id="L60">            String text = startTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT));</span>
+<span class="fc" id="L61">            startTimeButton.setText(text);</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (endTime == null) {</span>
+<span class="fc" id="L63">                endTime = startTime.plusMinutes(30);</span>
+            }
+        }
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (endTime != null) {</span>
+<span class="fc" id="L67">            this.selectedEndTime = endTime;</span>
+<span class="fc" id="L68">            String text = endTime.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT));</span>
+<span class="fc" id="L69">            endTimeButton.setText(text);</span>
+        }
+<span class="fc" id="L71">    }</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L75">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L76">        setContentView(R.layout.activity_book_appointment);</span>
+<span class="fc" id="L77">        dateButtonView = findViewById(R.id.dateButtonView);</span>
+<span class="fc" id="L78">        startTimeButton = findViewById(R.id.startTimeButton);</span>
+<span class="fc" id="L79">        endTimeButton = findViewById(R.id.endTimeButton);</span>
+<span class="fc" id="L80">        descriptionView = findViewById(R.id.descriptionView);</span>
+<span class="fc" id="L81">        advisorNameView = findViewById(R.id.advisorNameView);</span>
+
+
+<span class="fc" id="L84">        setSelectedDate(LocalDate.now());</span>
+<span class="fc" id="L85">        setSelectedTimes(LocalTime.now(), null);</span>
+
+<span class="fc" id="L87">        studentId = DashboardActivity.getIsuRegistrationId();</span>
+
+<span class="fc" id="L89">        dateButtonView.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L90">            DatePickerDialog dialog = new DatePickerDialog(this,</span>
+                    (view2, selectedYear,selectedMonth, selectedDay) -&gt;{
+<span class="fc" id="L92">                       setSelectedDate(LocalDate.of(selectedYear, selectedMonth + 1, selectedDay));</span>
+<span class="fc" id="L93">                    },</span>
+<span class="fc" id="L94">                    selecteddate.getYear(), selecteddate.getMonthValue() - 1, selecteddate.getDayOfMonth());</span>
+<span class="fc" id="L95">            dialog.show();</span>
+<span class="fc" id="L96">        });</span>
+
+<span class="fc" id="L98">        startTimeButton.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L99">            TimePickerDialog dialog = new TimePickerDialog(this,</span>
+                    (view2, hourOfDay, minute) -&gt; {
+<span class="fc" id="L101">                        setSelectedTimes(LocalTime.of(hourOfDay, minute), null);</span>
+<span class="fc" id="L102">                        },</span>
+<span class="fc" id="L103">                selectedStartTime.getHour(), selectedStartTime.getMinute(),</span>
+                false);
+<span class="fc" id="L105">            dialog.show();</span>
+<span class="fc" id="L106">        });</span>
+
+<span class="fc" id="L108">        endTimeButton.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L109">            TimePickerDialog dialog = new TimePickerDialog(this,</span>
+                    (view2, hourOfDay, minute) -&gt; {
+<span class="fc" id="L111">                        setSelectedTimes(null, LocalTime.of(hourOfDay, minute));</span>
+<span class="fc" id="L112">                    },</span>
+<span class="fc" id="L113">                    selectedEndTime.getHour(), selectedEndTime.getMinute(),</span>
+                    false);
+<span class="fc" id="L115">            dialog.show();</span>
+<span class="fc" id="L116">        });</span>
+
+<span class="fc" id="L118">        Button bookBtn = findViewById(R.id.book);</span>
+
+<span class="fc" id="L120">        bookBtn.setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L121">            var body = new JSONObject();</span>
+            try {
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                if (advisorId == null) {</span>
+<span class="nc" id="L124">                    snackbarMsg(view, &quot;Missing advisor ID&quot;);</span>
+<span class="nc" id="L125">                    return;</span>
+                }
+
+<span class="fc" id="L128">                var student = new JSONObject();</span>
+<span class="fc" id="L129">                student.put(&quot;universityId&quot;, studentId);</span>
+<span class="fc" id="L130">                body.put(&quot;student&quot;, student);</span>
+
+<span class="fc" id="L132">                var advisor = new JSONObject();</span>
+<span class="fc" id="L133">                advisor.put(&quot;advisorId&quot;, advisorId);</span>
+<span class="fc" id="L134">                body.put(&quot;advisor&quot;, advisor);</span>
+
+<span class="fc" id="L136">                body.put(&quot;description&quot;, descriptionView.getText());</span>
+
+<span class="fc" id="L138">                body.put(&quot;startTime&quot;, selecteddate.atTime(selectedStartTime));</span>
+<span class="fc" id="L139">                body.put(&quot;endTime&quot;, selecteddate.atTime(selectedEndTime));</span>
+<span class="nc" id="L140">            } catch (JSONException e) {</span>
+<span class="nc" id="L141">                throw new RuntimeException(e);</span>
+<span class="fc" id="L142">            }</span>
+
+<span class="fc" id="L144">            var request = new StringRequest(</span>
+                    Request.Method.POST,
+<span class="fc" id="L146">                    MainActivity.getBaseURL() + &quot;/&quot; + studentId + &quot;/schedule-appointment&quot; ,</span>
+                    (String response) -&gt; {
+<span class="fc" id="L148">                        snackbarMsg(view, &quot;Successfully booked appointment!&quot;);</span>
+<span class="fc" id="L149">                    },</span>
+                    (VolleyError error) -&gt; {
+                        String resp;
+<span class="pc bpc" id="L152" title="2 of 4 branches missed.">                        if (error.networkResponse.data != null &amp;&amp; error.networkResponse.data.length != 0) {</span>
+<span class="fc" id="L153">                            resp = new String(error.networkResponse.data, StandardCharsets.UTF_8);</span>
+                        } else {
+<span class="nc" id="L155">                            resp = null;</span>
+                        }
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">                        if (resp == null) {</span>
+<span class="nc" id="L158">                            snackbarMsg(view, &quot;Error&quot;);</span>
+                        } else {
+<span class="fc" id="L160">                            snackbarMsg(view, &quot;Error: &quot; + resp);</span>
+                        }
+<span class="fc" id="L162">                        System.out.println(&quot;error&quot; + error + &quot; &quot; + resp + '\n' + body);</span>
+<span class="fc" id="L163">                    }) {</span>
+                @Override
+                public byte[] getBody() {
+<span class="fc" id="L166">                    return body.toString().getBytes();</span>
+                }
+                @Override
+                public String getBodyContentType() {
+<span class="fc" id="L170">                    return &quot;application/json&quot;;</span>
+                }
+            };
+<span class="fc" id="L173">            VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L174">        });</span>
+
+
+<span class="fc" id="L177">        JsonObjectRequest request = new JsonObjectRequest(</span>
+                Request.Method.GET,
+<span class="fc" id="L179">                MainActivity.getBaseURL() + &quot;/students/&quot; + studentId,</span>
+                null,
+                (JSONObject response) -&gt; {
+                    try {
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                        if (response.isNull(&quot;studentAdvisor&quot;)) {</span>
+<span class="nc" id="L184">                            snackbarMsg(advisorNameView, &quot;You have no advisor!&quot;);</span>
+                        }
+<span class="fc" id="L186">                        JSONObject advisor = response.getJSONObject(&quot;studentAdvisor&quot;);</span>
+<span class="fc" id="L187">                        JSONObject advisorIsu = advisor.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="fc" id="L188">                        advisorNameView.setText(advisorIsu.getString(&quot;fullNameFriendly&quot;));</span>
+<span class="fc" id="L189">                        advisorId = advisor.getLong(&quot;advisorId&quot;);</span>
+<span class="nc" id="L190">                    } catch (JSONException e) {</span>
+<span class="nc" id="L191">                        throw new RuntimeException(e);</span>
+<span class="fc" id="L192">                    }</span>
+<span class="fc" id="L193">                },</span>
+                (VolleyError error) -&gt; {
+<span class="nc" id="L195">                    System.out.println(error);</span>
+<span class="nc" id="L196">                    snackbarMsg(advisorNameView, &quot;Error retrieving student information.&quot;);</span>
+<span class="nc" id="L197">                });</span>
+<span class="fc" id="L198">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L199">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

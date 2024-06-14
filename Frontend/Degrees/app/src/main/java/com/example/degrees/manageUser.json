@@ -1,0 +1,28 @@
+{
+  "isuRegistration": {
+    "advisor": {
+      "advisorDepartment": "Department of Computer Science"
+    },
+    "netId": "testNetID",
+    "student": {
+      "major": {
+        "department": {
+          "departmentAddress": "4444 Osborn Dr",
+          "departmentCode": "COM S",
+          "departmentId": 15,
+          "departmentName": "Computer Science"
+        },
+        "id": 934,
+        "name": "Computer Science",
+        "suffix": "BA"
+      },
+      "universityId": 0
+    },
+    "universityId": 0
+  },
+  "phoneNumber": "5155555555",
+  "userAddress": "Friley Hall",
+  "userEmail": "testUser@testEmail.com",
+  "userId": 3242,
+  "userName": "testUserName"
+}

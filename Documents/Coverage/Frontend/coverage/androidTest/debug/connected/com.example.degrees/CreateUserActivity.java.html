@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CreateUserActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">CreateUserActivity.java</span></div><h1>CreateUserActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.content.Intent;
+import android.os.Bundle;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.snackbar.Snackbar;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.degrees.databinding.ActivitySignUpBinding;
+
+
+import android.view.View;
+
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Activity responsible for creating a new user through a sign-up process.
+ */
+<span class="fc" id="L41">public class CreateUserActivity extends AppCompatActivity {</span>
+
+    private ActivitySignUpBinding binding;
+
+    /**
+     * Initializes the SignUpActivity.
+     * @param savedInstanceState The saved state of the activity
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L51">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L52">        binding = ActivitySignUpBinding.inflate(getLayoutInflater());</span>
+<span class="fc" id="L53">        View view = binding.getRoot();</span>
+<span class="fc" id="L54">        setContentView(view);</span>
+<span class="fc" id="L55">        View signUpButton = findViewById(R.id.btnSignUp);</span>
+<span class="fc" id="L56">        signUpButton.setOnClickListener(new View.OnClickListener() {</span>
+
+            @Override
+            public void onClick(View v) {
+<span class="fc" id="L60">                createUser();</span>
+<span class="fc" id="L61">            }</span>
+        });
+
+
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Navigates back to the sign-in screen from the sign-up screen.
+     * @param view The current view
+     */
+    public void GoBackSignInScreen(View view) {
+<span class="nc" id="L72">        Button goBackToSignInFromSignUp = findViewById(R.id.CreateNewUser);</span>
+<span class="nc" id="L73">        goBackToSignInFromSignUp.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Launch the Sign-Up Activity
+<span class="nc" id="L77">                Intent intent = new Intent(CreateUserActivity.this, MainActivity.class);</span>
+<span class="nc" id="L78">                startActivity(intent);</span>
+<span class="nc" id="L79">            }</span>
+        });
+<span class="nc" id="L81">    }</span>
+
+    /**
+     * Retrieves the base URL.
+     * @return The base URL
+     */
+    public String getBaseURL() {
+<span class="fc" id="L88">        return MainActivity.getBaseURL();</span>
+    }
+
+    /**
+     * Handles the creation of a new user after validating the input data.
+     */
+    private void createUser() {
+<span class="fc" id="L95">        System.out.println(&quot;createUser called&quot;);</span>
+<span class="fc" id="L96">        EditText userName = findViewById(R.id.edtSignUpFullName);</span>
+<span class="fc" id="L97">        EditText userEmail = findViewById(R.id.edtSignUpEmail);</span>
+<span class="fc" id="L98">        EditText userPhoneNumber = findViewById(R.id.edtSignUpEmail);</span>
+<span class="fc" id="L99">        EditText editTextPassword = findViewById(R.id.edtSignUpPassword);</span>
+<span class="fc" id="L100">        EditText editTextConfirmPassword = findViewById(R.id.edtSignUpConfirmPassword);</span>
+
+<span class="fc" id="L102">        String userNameText = userName.getText().toString();</span>
+<span class="fc" id="L103">        String userEmailText = userEmail.getText().toString();</span>
+<span class="fc" id="L104">        String userPhoneNumberText = userPhoneNumber.getText().toString();</span>
+<span class="fc" id="L105">        String userSignUpPassword = editTextPassword.getText().toString();</span>
+<span class="fc" id="L106">        String confirmPassword = editTextConfirmPassword.getText().toString();</span>
+
+        // Check if the passwords match
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (!userSignUpPassword.equals(confirmPassword)) {</span>
+            // Passwords don't match, display an error message
+<span class="nc" id="L111">            Snackbar.make(binding.getRoot(), &quot;Passwords do not match&quot;, Snackbar.LENGTH_LONG).show();</span>
+<span class="nc" id="L112">            return; // Exit the method</span>
+        }
+
+        // Request a JSON response from the provided URL.
+<span class="fc" id="L116">        String url = getBaseURL() + &quot;/users&quot;;</span>
+
+        // Create a JSON object to send as the request body.
+<span class="fc" id="L119">        JSONObject requestBody = new JSONObject();</span>
+        try {
+<span class="fc" id="L121">            requestBody.put(&quot;userName&quot;, userNameText);</span>
+<span class="fc" id="L122">            requestBody.put(&quot;userPassword&quot;, userSignUpPassword);</span>
+<span class="fc" id="L123">            requestBody.put(&quot;userAddress&quot;, &quot;&quot;);</span>
+<span class="fc" id="L124">            requestBody.put(&quot;userEmail&quot;, userEmailText);</span>
+<span class="fc" id="L125">            requestBody.put(&quot;phoneNumber&quot;, userPhoneNumberText);</span>
+
+
+<span class="nc" id="L128">        } catch (JSONException e) {</span>
+<span class="nc" id="L129">            e.printStackTrace();</span>
+<span class="fc" id="L130">        }</span>
+
+        // Check if the passwords match
+
+        // Request a JSON response from the provided URL.
+
+        // Create a JSON object to send as the request body.
+<span class="fc" id="L137">        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, url, requestBody,</span>
+<span class="fc" id="L138">                new Response.Listener&lt;JSONObject&gt;() {</span>
+                    @Override
+                    public void onResponse(JSONObject response) {
+<span class="fc" id="L141">                        System.out.println(&quot;User created successfully!&quot;);</span>
+<span class="fc" id="L142">                        Intent intent = new Intent(CreateUserActivity.this, MainActivity.class);</span>
+<span class="fc" id="L143">                        startActivity(intent);</span>
+<span class="fc" id="L144">                    }</span>
+                },
+<span class="fc" id="L146">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L149">                        System.out.println(&quot;User creation failed: &quot; + error.toString());</span>
+                        // Handle the error here, e.g., display an error message.
+<span class="nc" id="L151">                        Snackbar.make(binding.getRoot(), &quot;User creation failed&quot;, Snackbar.LENGTH_LONG).show();</span>
+<span class="nc" id="L152">                    }</span>
+<span class="fc" id="L153">                }) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="fc" id="L156">                HashMap&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+                // Add headers if needed, e.g., authorization token.
+                // headers.put(&quot;Authorization&quot;, &quot;Bearer YOUR_ACCESS_TOKEN&quot;);
+                // headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);
+<span class="fc" id="L160">                return headers;</span>
+            }
+        };
+
+        // Adding the request to the Volley request queue.
+<span class="fc" id="L165">        VolleySingleton2.getInstance(getApplicationContext()).addToRequestQueue(jsonRequest);</span>
+<span class="fc" id="L166">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

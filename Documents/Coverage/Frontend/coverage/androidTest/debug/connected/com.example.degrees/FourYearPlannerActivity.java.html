@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FourYearPlannerActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">FourYearPlannerActivity.java</span></div><h1>FourYearPlannerActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Manages the display of a four-year planner, fetching and displaying courses for each semester.
+ */
+<span class="fc" id="L27">public class FourYearPlannerActivity extends AppCompatActivity {</span>
+
+    // OUR URL FOR TEH API
+    private static final String API_URL = &quot;http://coms-309-036.class.las.iastate.edu:8080/&quot;;
+
+    private Button addSemesterButton;
+    private ViewGroup semesterContainer;
+<span class="fc" id="L34">    private int semesterCounter = 0;</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L38">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L39">        setContentView(R.layout.four_year_planner_activity);</span>
+
+<span class="fc" id="L41">        addSemesterButton = findViewById(R.id.addSemesterButton);</span>
+<span class="fc" id="L42">        semesterContainer = findViewById(R.id.semesterContainer);</span>
+
+<span class="fc" id="L44">        addSemesterButton.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View v) {
+<span class="fc" id="L47">                addSemester(&quot;Semester &quot; + (++semesterCounter));</span>
+<span class="fc" id="L48">            }</span>
+        });
+<span class="fc" id="L50">    }</span>
+
+    /**
+     * Adds a new semester to the display, fetching and displaying its respective courses.
+     *
+     * @param semesterName The name of the semester to be added.
+     */
+    private void addSemester(String semesterName) {
+<span class="fc" id="L58">        CardView semesterCard = new CardView(this);</span>
+<span class="fc" id="L59">        semesterCard.setLayoutParams(new CardView.LayoutParams(</span>
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+<span class="fc" id="L61">        semesterCard.setContentPadding(16, 16, 16, 16);</span>
+
+<span class="fc" id="L63">        TextView semesterTitle = new TextView(this);</span>
+<span class="fc" id="L64">        semesterTitle.setText(semesterName);</span>
+<span class="fc" id="L65">        semesterTitle.setTextSize(20);</span>
+<span class="fc" id="L66">        semesterTitle.setTextColor(ContextCompat.getColor(this, R.color.BlueViolet));</span>
+
+        // Create a TableLayout for course rows
+<span class="fc" id="L69">        TableLayout courseTable = new TableLayout(this);</span>
+<span class="fc" id="L70">        courseTable.setLayoutParams(new TableLayout.LayoutParams(</span>
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+<span class="fc" id="L72">        courseTable.setStretchAllColumns(true);</span>
+
+        // Add components to the semester container
+<span class="fc" id="L75">        semesterCard.addView(semesterTitle);</span>
+<span class="fc" id="L76">        semesterCard.addView(courseTable);</span>
+
+<span class="fc" id="L78">        semesterContainer.addView(semesterCard);</span>
+
+        // Fetch and add courses from the backend
+<span class="fc" id="L81">        new GetCoursesDataTask(courseTable).execute(API_URL + &quot;/semester/&quot; + semesterName);</span>
+<span class="fc" id="L82">    }</span>
+
+    // AsyncTask to get courses and add them to the semester
+    private class GetCoursesDataTask extends AsyncTask&lt;String, Void, String&gt; {
+        private TableLayout courseTable;
+
+<span class="fc" id="L88">        public GetCoursesDataTask(TableLayout courseTable) {</span>
+<span class="fc" id="L89">            this.courseTable = courseTable;</span>
+<span class="fc" id="L90">        }</span>
+
+        @Override
+        protected String doInBackground(String... params) {
+<span class="fc" id="L94">            String apiUrl = params[0];</span>
+            try {
+<span class="fc" id="L96">                URL url = new URL(apiUrl);</span>
+<span class="fc" id="L97">                HttpURLConnection connection = (HttpURLConnection) url.openConnection();</span>
+
+                // Set up the GET request
+<span class="fc" id="L100">                connection.setRequestMethod(&quot;GET&quot;);</span>
+<span class="fc" id="L101">                connection.setDoInput(true);</span>
+
+                // Read the response
+<span class="nc" id="L104">                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));</span>
+<span class="nc" id="L105">                StringBuilder response = new StringBuilder();</span>
+                String line;
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                while ((line = reader.readLine()) != null) {</span>
+<span class="nc" id="L108">                    response.append(line);</span>
+                }
+
+<span class="nc" id="L111">                reader.close();</span>
+<span class="nc" id="L112">                connection.disconnect();</span>
+
+<span class="nc" id="L114">                return response.toString();</span>
+<span class="fc" id="L115">            } catch (Exception e) {</span>
+<span class="fc" id="L116">                e.printStackTrace();</span>
+<span class="fc" id="L117">                return null;</span>
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">            if (result != null) {</span>
+                // Handle the response data and add courses to the table
+                try {
+<span class="nc" id="L126">                    JSONArray coursesArray = new JSONArray(result);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">                    for (int i = 0; i &lt; coursesArray.length(); i++) {</span>
+<span class="nc" id="L128">                        String courseName = coursesArray.getString(i);</span>
+<span class="nc" id="L129">                        addCourse(courseTable, courseName);</span>
+                    }
+<span class="nc" id="L131">                } catch (JSONException e) {</span>
+<span class="nc" id="L132">                    e.printStackTrace();</span>
+<span class="nc" id="L133">                }</span>
+            }
+<span class="fc" id="L135">        }</span>
+    }
+
+    /**
+     * Adds a course to the specified TableLayout.
+     *
+     * @param courseTable The TableLayout to which the course will be added.
+     * @param courseName  The name of the course to be added.
+     */
+    private void addCourse(TableLayout courseTable, String courseName) {
+<span class="nc" id="L145">        TableRow courseRow = new TableRow(this);</span>
+<span class="nc" id="L146">        courseRow.setLayoutParams(new TableRow.LayoutParams(</span>
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+<span class="nc" id="L149">        TextView courseNameTextView = new TextView(this);</span>
+<span class="nc" id="L150">        courseNameTextView.setText(courseName);</span>
+<span class="nc" id="L151">        courseNameTextView.setLayoutParams(new TableRow.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 2));</span>
+
+        // Add components to the course row
+<span class="nc" id="L154">        courseRow.addView(courseNameTextView);</span>
+
+        // Add the course row to the table
+<span class="nc" id="L157">        courseTable.addView(courseRow);</span>
+<span class="nc" id="L158">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

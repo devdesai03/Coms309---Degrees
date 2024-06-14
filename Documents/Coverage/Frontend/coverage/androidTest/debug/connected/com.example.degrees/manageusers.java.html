@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>manageusers.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">manageusers.java</span></div><h1>manageusers.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.TextView;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.JsonArray;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+
+<span class="fc" id="L50">public class manageusers extends AppCompatActivity {</span>
+
+    public abstract class CustomArrayAdapter extends ArrayAdapter&lt;Optional&lt;JSONObject&gt;&gt; {
+<span class="fc" id="L53">        public CustomArrayAdapter(@NonNull Context context, @NonNull List&lt;Optional&lt;JSONObject&gt;&gt; objects) {</span>
+<span class="fc" id="L54">            super(context, android.R.layout.simple_spinner_dropdown_item, objects);</span>
+<span class="fc" id="L55">        }</span>
+
+        abstract String convertToString(JSONObject object) throws JSONException;
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+<span class="fc" id="L61">            TextView view = (TextView) super.getView(position, convertView, parent);</span>
+<span class="fc" id="L62">            JSONObject object = super.getItem(position).orElse(null);</span>
+            try {
+<span class="fc" id="L64">                view.setText(convertToString(object));</span>
+<span class="nc" id="L65">            } catch (JSONException e) {</span>
+<span class="nc" id="L66">                throw new RuntimeException(e);</span>
+<span class="fc" id="L67">            }</span>
+<span class="fc" id="L68">            return view;</span>
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+<span class="fc" id="L73">            TextView view = (TextView) super.getDropDownView(position, convertView, parent);</span>
+<span class="fc" id="L74">            JSONObject object = super.getItem(position).orElse(null);</span>
+            try {
+<span class="fc" id="L76">                view.setText(convertToString(object));</span>
+<span class="nc" id="L77">            } catch (JSONException e) {</span>
+<span class="nc" id="L78">                throw new RuntimeException(e);</span>
+<span class="fc" id="L79">            }</span>
+<span class="fc" id="L80">            return view;</span>
+        }
+    }
+
+    JSONObject TEST_exampleMajor;
+//    JSONArray degrees_list;
+
+    List&lt;Optional&lt;JSONObject&gt;&gt; departmentsList;
+    Map&lt;Long, Integer&gt; departmentsMap;
+    List&lt;Optional&lt;JSONObject&gt;&gt; advisorsList;
+    Map&lt;Long, Integer&gt; advisorsMap;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L94">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L95">        setContentView(R.layout.activity_manageusers);</span>
+<span class="fc" id="L96">        Button Savebtn =  findViewById(R.id.Save);</span>
+<span class="fc" id="L97">        Savebtn.setOnClickListener(btn -&gt; {</span>
+<span class="fc" id="L98">            this.putRequest(this.userInfo);</span>
+<span class="fc" id="L99">        });</span>
+
+        Long userId;
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (getIntent().hasExtra(&quot;editingUserId&quot;)) {</span>
+<span class="fc" id="L103">            userId = getIntent().getLongExtra(&quot;editingUserId&quot;, -1);</span>
+        } else {
+<span class="nc" id="L105">            userId = (long)7;</span>
+        }
+
+//        loadDegrees(response-&gt;loadUser(userId));
+
+<span class="fc" id="L110">        loadData(&quot;/departments/&quot;, (list, map) -&gt; {</span>
+<span class="fc" id="L111">            departmentsList = list;</span>
+<span class="fc" id="L112">            departmentsMap = map;</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (advisorsList != null)</span>
+<span class="nc" id="L114">                loadUser(userId);</span>
+<span class="fc" id="L115">        }, dept -&gt; dept.getLong(&quot;departmentId&quot;));</span>
+<span class="fc" id="L116">        loadData(&quot;/advisor/&quot;, (list, map) -&gt; {</span>
+<span class="fc" id="L117">            advisorsList = list;</span>
+<span class="fc" id="L118">            advisorsMap = map;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (departmentsList != null)</span>
+<span class="fc" id="L120">                loadUser(userId);</span>
+<span class="fc" id="L121">        }, adv -&gt; adv.getLong(&quot;advisorId&quot;));</span>
+
+//        try {
+//            String dummyDataString = &quot;{\n&quot; +
+//                    &quot;  \&quot;isuRegistration\&quot;: {\n&quot; +
+//                    &quot;    \&quot;advisor\&quot;: {\n&quot; +
+//                    &quot;      \&quot;advisorDepartment\&quot;: \&quot;Department of Computer Science\&quot;\n&quot; +
+//                    &quot;    },\n&quot; +
+//                    &quot;    \&quot;netId\&quot;: \&quot;testNetID\&quot;,\n&quot; +
+//                    &quot;    \&quot;student\&quot;: {\n&quot; +
+//                    &quot;      \&quot;major\&quot;: {\n&quot; +
+//                    &quot;        \&quot;department\&quot;: {\n&quot; +
+//                    &quot;          \&quot;departmentAddress\&quot;: \&quot;4444 Osborn Dr\&quot;,\n&quot; +
+//                    &quot;          \&quot;departmentCode\&quot;: \&quot;COM S\&quot;,\n&quot; +
+//                    &quot;          \&quot;departmentId\&quot;: 15,\n&quot; +
+//                    &quot;          \&quot;departmentName\&quot;: \&quot;Computer Science\&quot;\n&quot; +
+//                    &quot;        },\n&quot; +
+//                    &quot;        \&quot;id\&quot;: 934,\n&quot; +
+//                    &quot;        \&quot;name\&quot;: \&quot;Computer Science\&quot;,\n&quot; +
+//                    &quot;        \&quot;suffix\&quot;: \&quot;BA\&quot;\n&quot; +
+//                    &quot;      },\n&quot; +
+//                    &quot;      \&quot;universityId\&quot;: 0\n&quot; +
+//                    &quot;    },\n&quot; +
+//                    &quot;    \&quot;universityId\&quot;: 0\n&quot; +
+//                    &quot;  },\n&quot; +
+//                    &quot;  \&quot;phoneNumber\&quot;: \&quot;5155555555\&quot;,\n&quot; +
+//                    &quot;  \&quot;userAddress\&quot;: \&quot;Friley Hall\&quot;,\n&quot; +
+//                    &quot;  \&quot;userEmail\&quot;: \&quot;testUser@testEmail.com\&quot;,\n&quot; +
+//                    &quot;  \&quot;userId\&quot;: 3242,\n&quot; +
+//                    &quot;  \&quot;userName\&quot;: \&quot;testUserName\&quot;\n&quot; +
+//                    &quot;}&quot;;
+//            JSONObject dummyData = new JSONObject(dummyDataString);
+//            TEST_exampleMajor = dummyData.getJSONObject(&quot;isuRegistration&quot;).getJSONObject(&quot;student&quot;).getJSONObject(&quot;major&quot;);
+//            displayUserInformation(dummyData);
+////        } catch (IOException e) {
+////            throw new RuntimeException(e);
+//        } catch (JSONException e) {
+//            throw new RuntimeException(e);
+//        }
+<span class="fc" id="L160">    }</span>
+
+    private JSONObject userInfo;
+
+
+    public void loadUser(Long userId) {
+<span class="fc" id="L166">        String url = &quot;/users/&quot; + userId;</span>
+
+<span class="fc" id="L168">        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,</span>
+<span class="fc" id="L169">                MainActivity.getBaseURL() + url, null,</span>
+                (JSONObject response) -&gt; {
+                    try {
+<span class="fc" id="L172">                        displayUserInformation(response);</span>
+<span class="nc" id="L173">                    } catch (JSONException e) {</span>
+<span class="nc" id="L174">                        e.printStackTrace(System.out);</span>
+<span class="fc" id="L175">                    }</span>
+<span class="fc" id="L176">                },</span>
+                (VolleyError error) -&gt; {
+<span class="nc" id="L178">                    snackbarMsg(findViewById(R.id.Save), &quot;Error loading user!&quot;);</span>
+<span class="nc" id="L179">                    System.out.println(&quot;The error is: &quot; + error);</span>
+<span class="nc" id="L180">                }</span>
+        );
+        // Do something with value!
+<span class="fc" id="L183">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+
+<span class="fc" id="L185">    }</span>
+
+    public void displayUserInformation(JSONObject userInfo) throws JSONException {
+<span class="fc" id="L188">        this.userInfo = userInfo;</span>
+<span class="fc" id="L189">        TextView userID = findViewById(R.id.userID);</span>
+<span class="fc" id="L190">        TextView userAddress = findViewById(R.id.userAddress);</span>
+<span class="fc" id="L191">        TextView userEmail = findViewById(R.id.userEmail);</span>
+<span class="fc" id="L192">        TextView userName = findViewById(R.id.userName);</span>
+<span class="fc" id="L193">        TextView userMobile = findViewById(R.id.userMobile);</span>
+
+
+<span class="fc" id="L196">        userID.setText(userInfo.optLong(&quot;userId&quot;) + &quot;&quot;);</span>
+<span class="fc" id="L197">        userAddress.setText(userInfo.optString(&quot;userAddress&quot;));</span>
+<span class="fc" id="L198">        userEmail.setText(userInfo.optString(&quot;userEmail&quot;));</span>
+<span class="fc" id="L199">        userName.setText(userInfo.optString(&quot;userName&quot;));</span>
+<span class="fc" id="L200">        userMobile.setText(userInfo.optString(&quot;phoneNumber&quot;));</span>
+
+<span class="fc" id="L202">        setOnChangeListener(userID, (changed) -&gt; {</span>
+<span class="fc" id="L203">            userInfo.put(&quot;userId&quot;, Long.valueOf(changed.toString()));</span>
+<span class="fc" id="L204">        });</span>
+<span class="fc" id="L205">        setOnChangeListener(userAddress, (changed) -&gt; {</span>
+<span class="fc" id="L206">            userInfo.put(&quot;userAddress&quot;, changed.toString());</span>
+<span class="fc" id="L207">        });</span>
+<span class="fc" id="L208">        setOnChangeListener(userEmail, (changed) -&gt; {</span>
+<span class="fc" id="L209">            userInfo.put(&quot;userEmail&quot;, changed.toString());</span>
+<span class="fc" id="L210">        });</span>
+<span class="fc" id="L211">        setOnChangeListener(userName, (changed) -&gt; {</span>
+<span class="fc" id="L212">            userInfo.put(&quot;userName&quot;, changed.toString());</span>
+<span class="fc" id="L213">        });</span>
+<span class="fc" id="L214">        setOnChangeListener(userMobile, (changed) -&gt; {</span>
+<span class="fc" id="L215">            userInfo.put(&quot;phoneNumber&quot;, changed.toString());</span>
+<span class="fc" id="L216">        });</span>
+
+
+<span class="fc" id="L219">        View isuRegistrationView = findViewById(R.id.isuRegistrationSection);</span>
+<span class="fc" id="L220">        Button isuRegBtn = findViewById(R.id.isuRegistrationToggle);</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (userInfo.isNull(&quot;isuRegistration&quot;)) {</span>
+<span class="fc" id="L222">            isuRegBtn.setText(&quot;Add&quot;);</span>
+<span class="fc" id="L223">            isuRegBtn.setOnClickListener((view) -&gt; {</span>
+                try {
+<span class="fc" id="L225">                    this.onClickIsuRegistration();</span>
+<span class="nc" id="L226">                } catch (JSONException e) {</span>
+<span class="nc" id="L227">                    e.printStackTrace();</span>
+<span class="fc" id="L228">                }</span>
+<span class="fc" id="L229">            });</span>
+<span class="fc" id="L230">            isuRegistrationView.setVisibility(View.GONE);</span>
+        } else {
+<span class="fc" id="L232">            isuRegBtn.setText(&quot;Delete&quot;);</span>
+<span class="fc" id="L233">            isuRegBtn.setOnClickListener((view) -&gt; {</span>
+                try {
+<span class="fc" id="L235">                    this.userInfo.put(&quot;isuRegistration&quot;, null);</span>
+<span class="fc" id="L236">                    this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L237">                } catch (JSONException e) {</span>
+<span class="nc" id="L238">                    e.printStackTrace();</span>
+<span class="fc" id="L239">                }</span>
+<span class="fc" id="L240">            });</span>
+<span class="fc" id="L241">            isuRegistrationView.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L242">            JSONObject isuRegistration = userInfo.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="fc" id="L243">            TextView universityId = findViewById(R.id.isuUniversityId);</span>
+<span class="fc" id="L244">            TextView netId = findViewById(R.id.isuNetId);</span>
+<span class="fc" id="L245">            TextView givenName = findViewById(R.id.isuGivenName);</span>
+<span class="fc" id="L246">            TextView middleName = findViewById(R.id.isuMiddleName);</span>
+<span class="fc" id="L247">            TextView surname = findViewById(R.id.isuSurname);</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">            if (!isuRegistration.isNull(&quot;universityId&quot;)) {</span>
+<span class="fc" id="L249">                universityId.setText(isuRegistration.getLong(&quot;universityId&quot;) + &quot;&quot;);</span>
+            } else {
+<span class="fc" id="L251">                universityId.setText(&quot;&quot;);</span>
+            }
+<span class="fc" id="L253">            netId.setText(isuRegistration.optString(&quot;netId&quot;));</span>
+
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if (!isuRegistration.isNull(&quot;givenName&quot;)) {</span>
+<span class="fc" id="L256">                givenName.setText(isuRegistration.getString(&quot;givenName&quot;));</span>
+            } else {
+<span class="fc" id="L258">                givenName.setText(&quot;&quot;);</span>
+            }
+<span class="fc bfc" id="L260" title="All 2 branches covered.">            if (!isuRegistration.isNull(&quot;middleName&quot;)) {</span>
+<span class="fc" id="L261">                middleName.setText(isuRegistration.getString(&quot;middleName&quot;));</span>
+            } else {
+<span class="fc" id="L263">                middleName.setText(&quot;&quot;);</span>
+            }
+<span class="fc bfc" id="L265" title="All 2 branches covered.">            if (!isuRegistration.isNull(&quot;surname&quot;)) {</span>
+<span class="fc" id="L266">                surname.setText(isuRegistration.getString(&quot;surname&quot;));</span>
+            } else {
+<span class="fc" id="L268">                surname.setText(&quot;&quot;);</span>
+            }
+
+<span class="fc" id="L271">            setOnChangeListener(universityId, (changed) -&gt; {</span>
+<span class="pc bpc" id="L272" title="1 of 4 branches missed.">                if (changed != null &amp;&amp; !changed.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L273">                    isuRegistration.put(&quot;universityId&quot;, Long.valueOf(changed));</span>
+                } else {
+<span class="fc" id="L275">                    isuRegistration.put(&quot;universityId&quot;, null);</span>
+                }
+<span class="fc" id="L277">            });</span>
+<span class="fc" id="L278">            setOnChangeListener(netId, (changed) -&gt; {</span>
+<span class="fc" id="L279">                isuRegistration.put(&quot;netId&quot;, changed);</span>
+<span class="fc" id="L280">            });</span>
+<span class="fc" id="L281">            setOnChangeListener(givenName, (changed) -&gt; {</span>
+<span class="pc bpc" id="L282" title="2 of 4 branches missed.">                if (changed != null &amp;&amp; !changed.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L283">                    isuRegistration.put(&quot;givenName&quot;, changed);</span>
+                } else {
+<span class="nc" id="L285">                    isuRegistration.put(&quot;givenName&quot;, null);</span>
+                }
+<span class="fc" id="L287">            });</span>
+<span class="fc" id="L288">            setOnChangeListener(middleName, (changed) -&gt; {</span>
+<span class="pc bpc" id="L289" title="2 of 4 branches missed.">                if (changed != null &amp;&amp; !changed.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L290">                    isuRegistration.put(&quot;middleName&quot;, changed);</span>
+                } else {
+<span class="nc" id="L292">                    isuRegistration.put(&quot;middleName&quot;, null);</span>
+                }
+<span class="fc" id="L294">            });</span>
+<span class="fc" id="L295">            setOnChangeListener(surname, (changed) -&gt; {</span>
+<span class="pc bpc" id="L296" title="2 of 4 branches missed.">                if (changed != null &amp;&amp; !changed.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L297">                    isuRegistration.put(&quot;surname&quot;, changed);</span>
+                } else {
+<span class="nc" id="L299">                    isuRegistration.put(&quot;surname&quot;, null);</span>
+                }
+<span class="fc" id="L301">            });</span>
+
+<span class="fc" id="L303">            View advisorView = findViewById(R.id.advisorSection);</span>
+<span class="fc" id="L304">            Button advisorButton = findViewById(R.id.advisorToggle);</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">            if (isuRegistration.isNull(&quot;advisor&quot;)) {</span>
+<span class="fc" id="L306">                advisorButton.setText(&quot;Add&quot;);</span>
+<span class="fc" id="L307">                advisorButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L309">                        JSONObject advisor = new JSONObject();</span>
+<span class="fc" id="L310">                        advisor.put(&quot;advisorDepartment&quot;, null);</span>
+<span class="fc" id="L311">                        isuRegistration.put(&quot;advisor&quot;, advisor);</span>
+<span class="fc" id="L312">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L313">                    } catch (JSONException e) {</span>
+<span class="nc" id="L314">                        e.printStackTrace();</span>
+<span class="fc" id="L315">                    }</span>
+<span class="fc" id="L316">                });</span>
+<span class="fc" id="L317">                advisorView.setVisibility(View.GONE);</span>
+            } else {
+<span class="fc" id="L319">                advisorButton.setText(&quot;Delete&quot;);</span>
+<span class="fc" id="L320">                advisorButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L322">                        isuRegistration.put(&quot;advisor&quot;, null);</span>
+<span class="fc" id="L323">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L324">                    } catch (JSONException e) {</span>
+<span class="nc" id="L325">                        e.printStackTrace();</span>
+<span class="fc" id="L326">                    }</span>
+<span class="fc" id="L327">                });</span>
+<span class="fc" id="L328">                advisorView.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L329">                JSONObject advisor = isuRegistration.getJSONObject(&quot;advisor&quot;);</span>
+<span class="fc" id="L330">                Spinner advisorDepartment = findViewById(R.id.advisorDepartment);</span>
+<span class="fc" id="L331">                advisorDepartment.setAdapter(new CustomArrayAdapter(this, departmentsList) {</span>
+                    @Override
+                    String convertToString(JSONObject department) throws JSONException {
+<span class="fc bfc" id="L334" title="All 2 branches covered.">                        if (department == null)</span>
+<span class="fc" id="L335">                            return &quot;No Department&quot;;</span>
+<span class="fc" id="L336">                        return String.format(&quot;%s (%s)&quot;,</span>
+<span class="fc" id="L337">                                department.getString(&quot;departmentName&quot;),</span>
+<span class="fc" id="L338">                                department.getString(&quot;departmentCode&quot;));</span>
+                    }
+                });
+<span class="fc bfc" id="L341" title="All 2 branches covered.">                if (!advisor.isNull(&quot;advisorDepartment&quot;)) {</span>
+<span class="fc" id="L342">                    Long id = advisor.getJSONObject(&quot;advisorDepartment&quot;)</span>
+<span class="fc" id="L343">                            .getLong(&quot;departmentId&quot;);</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">                    if (departmentsMap.containsKey(id)) {</span>
+<span class="fc" id="L345">                        advisorDepartment.setSelection(departmentsMap.get(id));</span>
+                    }
+                }
+<span class="fc" id="L348">                setOnChangeListener(advisorDepartment, newValue -&gt; {</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                    if (newValue == null) {</span>
+<span class="fc" id="L350">                        advisor.put(&quot;advisorDepartment&quot;, null);</span>
+                    } else {
+<span class="fc" id="L352">                        JSONObject dept = new JSONObject();</span>
+<span class="fc" id="L353">                        dept.put(&quot;departmentId&quot;, newValue.getLong(&quot;departmentId&quot;));</span>
+<span class="fc" id="L354">                        advisor.put(&quot;advisorDepartment&quot;, dept);</span>
+                    }
+<span class="fc" id="L356">                });</span>
+            }
+
+<span class="fc" id="L359">            View instructorView = findViewById(R.id.instructorSection);</span>
+<span class="fc" id="L360">            Button instructorButton = findViewById(R.id.instructorToggle);</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">            if (isuRegistration.isNull(&quot;instructor&quot;)) {</span>
+<span class="fc" id="L362">                instructorButton.setText(&quot;Add&quot;);</span>
+<span class="fc" id="L363">                instructorButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L365">                        JSONObject instructor = new JSONObject();</span>
+<span class="fc" id="L366">                        instructor.put(&quot;instructorDepartment&quot;, null);</span>
+<span class="fc" id="L367">                        isuRegistration.put(&quot;instructor&quot;, instructor);</span>
+<span class="fc" id="L368">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L369">                    } catch (JSONException e) {</span>
+<span class="nc" id="L370">                        e.printStackTrace();</span>
+<span class="fc" id="L371">                    }</span>
+<span class="fc" id="L372">                });</span>
+<span class="fc" id="L373">                instructorView.setVisibility(View.GONE);</span>
+            } else {
+<span class="fc" id="L375">                instructorButton.setText(&quot;Delete&quot;);</span>
+<span class="fc" id="L376">                instructorButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L378">                        isuRegistration.put(&quot;instructor&quot;, null);</span>
+<span class="fc" id="L379">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L380">                    } catch (JSONException e) {</span>
+<span class="nc" id="L381">                        e.printStackTrace();</span>
+<span class="fc" id="L382">                    }</span>
+<span class="fc" id="L383">                });</span>
+<span class="fc" id="L384">                instructorView.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L385">                JSONObject instructor = isuRegistration.getJSONObject(&quot;instructor&quot;);</span>
+<span class="fc" id="L386">                Spinner instructorDepartment = findViewById(R.id.instructorDepartment);</span>
+<span class="fc" id="L387">                instructorDepartment.setAdapter(new CustomArrayAdapter(this, departmentsList) {</span>
+                    @Override
+                    String convertToString(JSONObject department) throws JSONException {
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                        if (department == null)</span>
+<span class="fc" id="L391">                            return &quot;No Department&quot;;</span>
+<span class="fc" id="L392">                        return String.format(&quot;%s (%s)&quot;,</span>
+<span class="fc" id="L393">                                department.getString(&quot;departmentName&quot;),</span>
+<span class="fc" id="L394">                                department.getString(&quot;departmentCode&quot;));</span>
+                    }
+                });
+<span class="fc bfc" id="L397" title="All 2 branches covered.">                if (!instructor.isNull(&quot;instructorDepartment&quot;)) {</span>
+<span class="fc" id="L398">                    Long id = instructor.getJSONObject(&quot;instructorDepartment&quot;)</span>
+<span class="fc" id="L399">                            .getLong(&quot;departmentId&quot;);</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">                    if (departmentsMap.containsKey(id)) {</span>
+<span class="fc" id="L401">                        instructorDepartment.setSelection(departmentsMap.get(id));</span>
+                    }
+                }
+<span class="fc" id="L404">                setOnChangeListener(instructorDepartment, newValue -&gt; {</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">                    if (newValue == null) {</span>
+<span class="fc" id="L406">                        instructor.put(&quot;instructorDepartment&quot;, null);</span>
+                    } else {
+<span class="fc" id="L408">                        JSONObject dept = new JSONObject();</span>
+<span class="fc" id="L409">                        dept.put(&quot;departmentId&quot;, newValue.getLong(&quot;departmentId&quot;));</span>
+<span class="fc" id="L410">                        instructor.put(&quot;instructorDepartment&quot;, dept);</span>
+                    }
+<span class="fc" id="L412">                });</span>
+
+            }
+<span class="fc" id="L415">            View studentView = findViewById(R.id.studentSection);</span>
+<span class="fc" id="L416">            Button studentButton = findViewById(R.id.studentToggle);</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">            if (isuRegistration.isNull(&quot;student&quot;)) {</span>
+<span class="fc" id="L418">                studentButton.setText(&quot;Add&quot;);</span>
+<span class="fc" id="L419">                studentButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L421">                        JSONObject student = new JSONObject();</span>
+<span class="fc" id="L422">                        student.put(&quot;major&quot;, null);</span>
+<span class="fc" id="L423">                        isuRegistration.put(&quot;student&quot;, student);</span>
+<span class="fc" id="L424">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L425">                    } catch (JSONException e) {</span>
+<span class="nc" id="L426">                        e.printStackTrace();</span>
+<span class="fc" id="L427">                    }</span>
+<span class="fc" id="L428">                });</span>
+<span class="fc" id="L429">                studentView.setVisibility(View.GONE);</span>
+            } else {
+<span class="fc" id="L431">                studentButton.setText(&quot;Delete&quot;);</span>
+<span class="fc" id="L432">                studentButton.setOnClickListener((view) -&gt; {</span>
+                    try {
+<span class="fc" id="L434">                        isuRegistration.put(&quot;student&quot;, null);</span>
+<span class="fc" id="L435">                        this.displayUserInformation(this.userInfo);</span>
+<span class="nc" id="L436">                    } catch (JSONException e) {</span>
+<span class="nc" id="L437">                        e.printStackTrace();</span>
+<span class="fc" id="L438">                    }</span>
+<span class="fc" id="L439">                });</span>
+<span class="fc" id="L440">                studentView.setVisibility(View.VISIBLE);</span>
+<span class="fc" id="L441">                JSONObject student = isuRegistration.getJSONObject(&quot;student&quot;);</span>
+<span class="fc" id="L442">                Spinner studentAdvisor = findViewById(R.id.studentAdvisor);</span>
+<span class="fc" id="L443">                studentAdvisor.setAdapter(new CustomArrayAdapter(this, advisorsList) {</span>
+                    @Override
+                    String convertToString(JSONObject advisor) throws JSONException {
+<span class="fc bfc" id="L446" title="All 2 branches covered.">                        if (advisor == null)</span>
+<span class="fc" id="L447">                            return &quot;No Advisor&quot;;</span>
+<span class="fc" id="L448">                        JSONObject isuRegistration = advisor.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="fc bfc" id="L449" title="All 2 branches covered.">                        if (isuRegistration.isNull(&quot;fullName&quot;)) {</span>
+<span class="fc" id="L450">                            return isuRegistration.getString(&quot;netId&quot;);</span>
+                        } else {
+<span class="fc" id="L452">                            return isuRegistration.getString(&quot;fullName&quot;);</span>
+                        }
+                    }
+                });
+<span class="fc bfc" id="L456" title="All 2 branches covered.">                if (!student.isNull(&quot;studentAdvisor&quot;)) {</span>
+<span class="fc" id="L457">                    Long studentAdvisorId = student.getJSONObject(&quot;studentAdvisor&quot;)</span>
+<span class="fc" id="L458">                            .getLong(&quot;advisorId&quot;);</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">                    if (advisorsMap.containsKey(studentAdvisorId)) {</span>
+<span class="fc" id="L460">                        studentAdvisor.setSelection(advisorsMap.get(studentAdvisorId));</span>
+                    }
+                }
+<span class="fc" id="L463">                setOnChangeListener(studentAdvisor, newValue -&gt; {</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">                    if (newValue == null) {</span>
+<span class="fc" id="L465">                        student.put(&quot;studentAdvisor&quot;, null);</span>
+                    } else {
+<span class="fc" id="L467">                        JSONObject advisor = new JSONObject();</span>
+<span class="fc" id="L468">                        advisor.put(&quot;advisorId&quot;, newValue.getLong(&quot;advisorId&quot;));</span>
+<span class="fc" id="L469">                        student.put(&quot;studentAdvisor&quot;, advisor);</span>
+                    }
+<span class="fc" id="L471">                });</span>
+
+//                Spinner studentMajor = findViewById(R.id.Major);
+//
+//                List&lt;JSONObject&gt; possibleMajors = new ArrayList&lt;&gt;();
+//                possibleMajors.add(null);
+//                for (int i = 0; i &lt; degrees_list.length(); i++) {
+//                    possibleMajors.add(degrees_list.getJSONObject(i));
+//                }
+//                populateSpinner(studentMajor,
+//                        student.isNull(&quot;major&quot;) ? null : student.getJSONObject(&quot;major&quot;),
+//                        possibleMajors,
+//                        (major) -&gt; {
+//                            if (major == null) {
+//                                return &quot;No Major&quot;;
+//                            }
+//                            try {
+//                                return major.getString(&quot;name&quot;) + &quot; &quot; + major.getString(&quot;suffix&quot;);
+//                            } catch (JSONException e) {
+//                                throw new RuntimeException(e);
+//                            }
+//                        },
+//                        (selectedMajor) -&gt; {
+//                            try {
+//                                student.put(&quot;major&quot;, selectedMajor);
+//                            } catch (JSONException e) {
+//                                throw new RuntimeException(e);
+//                            }
+//                        });
+            }
+        }
+
+
+<span class="fc" id="L504">    }</span>
+
+    private interface ThrowingFunction&lt;T, E&gt; {
+        E apply(T t) throws JSONException;
+    }
+    public &lt;Id&gt; void loadData(String endpoint,
+                         BiConsumer&lt;? super List&lt;Optional&lt;JSONObject&gt;&gt;, ? super Map&lt;Id, Integer&gt;&gt; callback,
+                         ThrowingFunction&lt;JSONObject, Id&gt; objToIdFunc) {
+
+<span class="fc" id="L513">        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET,</span>
+<span class="fc" id="L514">                MainActivity.getBaseURL() + endpoint, null,</span>
+                (JSONArray response) -&gt; {
+                    try {
+<span class="fc" id="L517">                        ArrayList&lt;Optional&lt;JSONObject&gt;&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L518">                        HashMap&lt;Id, Integer&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L519">                        list.add(Optional.empty());</span>
+<span class="fc bfc" id="L520" title="All 2 branches covered.">                        for (int i = 0; i &lt; response.length(); i++) {</span>
+<span class="fc" id="L521">                            JSONObject obj = response.getJSONObject(i);</span>
+<span class="fc" id="L522">                            list.add(Optional.of(obj));</span>
+<span class="fc" id="L523">                            map.put(objToIdFunc.apply(obj), i + 1);</span>
+                        }
+<span class="fc" id="L525">                        callback.accept(list, map);</span>
+<span class="nc" id="L526">                    } catch (JSONException e) {</span>
+<span class="nc" id="L527">                        throw new RuntimeException(e);</span>
+<span class="fc" id="L528">                    }</span>
+<span class="fc" id="L529">                },</span>
+                (VolleyError error) -&gt; {
+<span class="nc" id="L531">                    snackbarMsg(findViewById(R.id.Save), &quot;Error loading data &quot; + endpoint);</span>
+<span class="nc" id="L532">                    System.out.println(&quot;The error is: &quot; + error.networkResponse);</span>
+<span class="nc" id="L533">                }</span>
+        );
+        // Do something with value!
+<span class="fc" id="L536">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);</span>
+<span class="fc" id="L537">    }</span>
+
+//    public void loadDegrees(Consumer&lt;JSONArray&gt; callback) {
+//        String url = &quot;/degrees/&quot; ;
+//
+//        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET,
+//                MainActivity.getBaseURL() + url, null,
+//                (JSONArray response) -&gt; {
+//
+//                        degrees_list = response;
+//                        callback.accept(response);
+//
+//                },
+//                (VolleyError error) -&gt; {
+//                    snackbarMsg(findViewById(R.id.Save), &quot;Error loading degrees&quot;);
+//                    System.out.println(&quot;The error is: &quot; + error);
+//                }
+//        );
+//        // Do something with value!
+//        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(request);
+//
+//    }
+
+
+
+
+    public void onClickIsuRegistration() throws JSONException {
+<span class="fc" id="L564">        JSONObject isuRegistration = new JSONObject();</span>
+<span class="fc" id="L565">        isuRegistration.put(&quot;universityId&quot;, null);</span>
+<span class="fc" id="L566">        isuRegistration.put(&quot;netId&quot;, null);</span>
+<span class="fc" id="L567">        this.userInfo.put(&quot;isuRegistration&quot;, isuRegistration);</span>
+<span class="fc" id="L568">         displayUserInformation(this.userInfo);</span>
+
+<span class="fc" id="L570">    }</span>
+    private interface ThrowingConsumer&lt;T&gt; {
+        void accept(T e) throws JSONException;
+    }
+    private void setOnChangeListener(TextView userInfo, ThrowingConsumer&lt;String&gt; changed){
+<span class="fc" id="L575">        userInfo.addTextChangedListener(new TextWatcher() {</span>
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+<span class="fc" id="L579">            }</span>
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+<span class="fc" id="L584">            }</span>
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                try {
+<span class="fc" id="L589">                    changed.accept(s.toString());</span>
+<span class="nc" id="L590">                } catch (JSONException e) {</span>
+<span class="nc" id="L591">                    e.printStackTrace();</span>
+<span class="fc" id="L592">                }</span>
+<span class="fc" id="L593">            }</span>
+        });
+<span class="fc" id="L595">    }</span>
+
+    private void setOnChangeListener(Spinner spinner, ThrowingConsumer&lt;JSONObject&gt; onChangeListener) {
+<span class="fc" id="L598">                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {</span>
+            @Override
+            public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L602">                var item = ((Optional&lt;JSONObject&gt;)parent.getItemAtPosition(position)).orElse(null);</span>
+                try {
+<span class="fc" id="L604">                    onChangeListener.accept(item);</span>
+<span class="nc" id="L605">                } catch (JSONException e) {</span>
+<span class="nc" id="L606">                    throw new RuntimeException(e);</span>
+<span class="fc" id="L607">                }</span>
+<span class="fc" id="L608">            }</span>
+
+            @Override
+            public void onNothingSelected(AdapterView&lt;?&gt; parent) {
+                try {
+<span class="nc" id="L613">                    onChangeListener.accept(null);</span>
+<span class="nc" id="L614">                } catch (JSONException e) {</span>
+<span class="nc" id="L615">                    throw new RuntimeException(e);</span>
+<span class="nc" id="L616">                }</span>
+<span class="nc" id="L617">            }</span>
+        });
+<span class="fc" id="L619">    }</span>
+//
+//    private &lt;Item&gt; void populateSpinner(Spinner spinner,
+//                                        Item currentlySelectedItem,
+//                                        List&lt;? extends Item&gt; items,
+//                                        Function&lt;Item, String&gt; itemNameFunction,
+//                                        Consumer&lt;Item&gt; onChangeListener) {
+//        HashMap&lt;String, Item&gt; nameToItemMap = new HashMap&lt;&gt;();
+//        ArrayList&lt;String&gt; itemNames = new ArrayList&lt;String&gt;();
+//        ArrayList&lt;Item&gt; itemsArray = new ArrayList&lt;Item&gt;();
+//        int initialPosition = -1;
+//
+//        String currentlySelectedItemName
+//                = itemNameFunction.apply(currentlySelectedItem);
+//
+//        for (int i = 0; i &lt; items.size(); i++) {
+//            Item item = items.get(i);
+//            String itemName = itemNameFunction.apply(item);
+//            nameToItemMap.put(itemName, item);
+//            itemNames.add(itemName);
+//            itemsArray.add(item);
+//            if (currentlySelectedItem != null &amp;&amp; currentlySelectedItemName.equals(itemName)) {
+//                initialPosition = i;
+//            }
+//        }
+//
+//        //A spinner is drop-down menu
+//        ArrayAdapter&lt;String&gt; spinnerArrayAdapter = new ArrayAdapter&lt;String&gt;(this,
+//                android.R.layout.simple_spinner_dropdown_item,
+//                itemNames);
+//        spinner.setAdapter(spinnerArrayAdapter);
+//
+//        if (currentlySelectedItem != null) {
+//            if (initialPosition == -1)
+//                throw new RuntimeException(&quot;Selected item nonexistent in items list&quot;);
+//            spinner.setSelection(initialPosition);
+//        }
+//        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView&lt;?&gt; parent, View view, int position, long id) {
+//                Item item = itemsArray.get(position);
+//                onChangeListener.accept(item);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView&lt;?&gt; parent) {
+//                onChangeListener.accept(null);
+//            }
+//        });
+//    }
+
+    private void putRequest(JSONObject userInfo) {
+
+        // Request a string response from the provided URL.
+        String url;
+        Long userId;
+        try {
+<span class="fc" id="L676">            userId = userInfo.getLong(&quot;userId&quot;);</span>
+<span class="fc" id="L677">            url = MainActivity.getBaseURL() + &quot;/users/&quot; + userId;</span>
+<span class="nc" id="L678">        } catch (JSONException e) {</span>
+<span class="nc" id="L679">            throw new RuntimeException(e);</span>
+<span class="fc" id="L680">        }</span>
+
+
+<span class="fc" id="L683">        JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.PUT, url, userInfo,</span>
+<span class="fc" id="L684">                new Response.Listener&lt;JSONObject&gt;() {</span>
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        // Display the first 500 characters of the response string.
+                        // String response can be converted to JSONObject via
+                        // JSONObject object = new JSONObject(response);
+//                        tvResponse.setText(&quot;Response is: &quot;+ response);
+<span class="fc" id="L692">                        snackbarMsg(findViewById(R.id.Save), &quot;Successfully saved user information!&quot;);</span>
+<span class="fc" id="L693">                        System.out.println(&quot;Put response is: &quot; + response);</span>
+<span class="fc" id="L694">                        loadUser(userId);</span>
+<span class="fc" id="L695">                    }</span>
+
+                },
+<span class="fc" id="L698">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+<span class="nc" id="L701">                        snackbarMsg(findViewById(R.id.Save), &quot;Error saving user&quot;);</span>
+<span class="nc" id="L702">                       System.out.println(error);</span>
+<span class="nc" id="L703">                    }</span>
+                }
+        );
+
+<span class="fc" id="L707">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);</span>
+<span class="fc" id="L708">    }</span>
+
+    public void snackbarMsg(View parent, String message) {
+<span class="fc" id="L711">        Snackbar snackbar =</span>
+<span class="fc" id="L712">                Snackbar.make(parent, message,</span>
+                        Snackbar.LENGTH_LONG );
+<span class="fc" id="L714">        snackbar.show();</span>
+<span class="fc" id="L715">    };</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GradingActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">GradingActivity.java</span></div><h1>GradingActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+<span class="nc" id="L27">public class GradingActivity extends AppCompatActivity {</span>
+    private Long sectionId;
+    private List&lt;Student&gt; students;
+    private RecyclerView recyclerView;
+    private GradingActivityAdapter adapter;
+
+<span class="nc" id="L33">    private OkHttpClient okHttpClient = new OkHttpClient();</span>
+    private static final String BASE_URL = &quot;http://coms-309-036.class.las.iastate.edu:8080/&quot;;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="nc" id="L38">        super.onCreate(savedInstanceState);</span>
+<span class="nc" id="L39">        setContentView(R.layout.activity_grading);</span>
+<span class="nc" id="L40">        recyclerView = findViewById(R.id.recyclerView);</span>
+<span class="nc" id="L41">        recyclerView.setLayoutManager(new LinearLayoutManager(this));</span>
+<span class="nc" id="L42">        students = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L43">        adapter = new GradingActivityAdapter(students);</span>
+<span class="nc" id="L44">        recyclerView.setAdapter(adapter);</span>
+<span class="nc" id="L45">        sectionId = getIntent().getLongExtra(&quot;sectionId&quot;, -1);</span>
+
+        // Fetch course sections from the API
+<span class="nc" id="L48">        fetchStudentsForCourseSection();</span>
+<span class="nc" id="L49">    }</span>
+
+    public long instructorId() {
+        //WILL CHANGE THIS LATER
+<span class="nc" id="L53">        return 50;</span>
+    }
+
+    private void fetchStudentsForCourseSection() {
+<span class="nc" id="L57">        Request request = new Request.Builder()</span>
+<span class="nc" id="L58">                .url(BASE_URL + &quot;course-registration-instructor/&quot; + instructorId())</span>
+<span class="nc" id="L59">                .get()</span>
+<span class="nc" id="L60">                .build();</span>
+
+<span class="nc" id="L62">        okHttpClient.newCall(request).enqueue(new Callback() {</span>
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+<span class="nc" id="L65">                e.printStackTrace();</span>
+                // Handle failure, show an error message, etc.
+<span class="nc" id="L67">            }</span>
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                if (response.isSuccessful()) {</span>
+<span class="nc" id="L72">                    final String responseBody = response.body().string();</span>
+<span class="nc" id="L73">                    Log.d(&quot;TAG&quot;, &quot;Response: &quot; + responseBody);</span>
+
+                    // Parse the JSON response and update UI with course sections
+<span class="nc" id="L76">                    List&lt;Student&gt; aStudents = parseCourseSectionsResponse(responseBody);</span>
+<span class="nc" id="L77">                    System.out.println(responseBody);</span>
+
+                    // Update the courseSections list
+<span class="nc" id="L80">                    students.clear();</span>
+<span class="nc" id="L81">                    students.addAll(aStudents);</span>
+
+<span class="nc" id="L83">                    runOnUiThread(() -&gt; {</span>
+<span class="nc" id="L84">                        adapter.notifyDataSetChanged();</span>
+<span class="nc" id="L85">                        Log.d(&quot;TAG&quot;, &quot;Data Set Changed. Number of students: &quot; + students.size());</span>
+<span class="nc" id="L86">                    });</span>
+<span class="nc" id="L87">                } else {</span>
+<span class="nc" id="L88">                    Log.d(&quot;TAG&quot;, &quot;Server Error in StudentsinCourseSection&quot;);</span>
+                }
+<span class="nc" id="L90">            }</span>
+        });
+<span class="nc" id="L92">    }</span>
+
+    // Helper method to parse JSON response for course sections
+// Helper method to parse JSON response for course sections
+    private List&lt;Student&gt; parseCourseSectionsResponse(String response) {
+<span class="nc" id="L97">        List&lt;Student&gt; students = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="nc" id="L99">            JSONArray jsonArray = new JSONArray(response);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (int i = 0; i &lt; jsonArray.length(); i++) {</span>
+<span class="nc" id="L101">                JSONObject jsonObject = jsonArray.getJSONObject(i);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (jsonObject.getJSONObject(&quot;section&quot;).getLong(&quot;id&quot;) != sectionId) {</span>
+<span class="nc" id="L104">                    continue;</span>
+                }
+
+                // Accessing student -&gt; isuRegistration -&gt; netId
+<span class="nc" id="L108">                JSONObject studentObject = jsonObject.optJSONObject(&quot;student&quot;);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (studentObject != null) {</span>
+<span class="nc" id="L110">                    JSONObject isuRegistrationObject = studentObject.optJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    if (isuRegistrationObject != null) {</span>
+<span class="nc" id="L112">                        String netId = isuRegistrationObject.getString(&quot;netId&quot;);</span>
+<span class="nc" id="L113">                        long universityId = isuRegistrationObject.getLong(&quot;universityId&quot;);</span>
+<span class="nc" id="L114">                        String fullName = isuRegistrationObject.getString(&quot;fullName&quot;);</span>
+<span class="nc" id="L115">                        String grade = jsonObject.getString(&quot;grade&quot;);</span>
+
+                        // Create a Student object with the extracted information
+<span class="nc" id="L118">                        Student student = new Student(universityId, netId, fullName, grade);</span>
+<span class="nc" id="L119">                        students.add(student);</span>
+                    }
+                }
+            }
+<span class="nc" id="L123">        } catch (JSONException e) {</span>
+<span class="nc" id="L124">            e.printStackTrace();</span>
+<span class="nc" id="L125">        }</span>
+<span class="nc" id="L126">        return students;</span>
+    }
+
+    public class GradingActivityAdapter extends RecyclerView.Adapter&lt;GradingActivityAdapter.ViewHolder&gt; {
+        private final List&lt;Student&gt; students;
+
+<span class="nc" id="L132">        public GradingActivityAdapter(List&lt;Student&gt; students) {</span>
+<span class="nc" id="L133">            this.students = students;</span>
+<span class="nc" id="L134">        }</span>
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L139">            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_course_section, parent, false);</span>
+<span class="nc" id="L140">            return new ViewHolder(view);</span>
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<span class="nc" id="L145">            Student studenting = students.get(position);</span>
+<span class="nc" id="L146">            holder.bind(studenting);</span>
+<span class="nc" id="L147">        }</span>
+
+        @Override
+        public int getItemCount() {
+<span class="nc" id="L151">            return students.size();</span>
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            private TextView studentNameTextView;
+            private TextView gradeIdentifierTextView;
+
+<span class="nc" id="L158">            public ViewHolder(@NonNull View itemView) {</span>
+<span class="nc" id="L159">                super(itemView);</span>
+<span class="nc" id="L160">                studentNameTextView = itemView.findViewById(R.id.courseNameTextView);</span>
+<span class="nc" id="L161">                gradeIdentifierTextView = itemView.findViewById(R.id.sectionIdentifierTextView);</span>
+<span class="nc" id="L162">            }</span>
+
+            public void bind(Student student) {
+<span class="nc" id="L165">                studentNameTextView.setText(&quot;Name: &quot; + student.getFullName());</span>
+<span class="nc" id="L166">                gradeIdentifierTextView.setText(&quot;ID: &quot; + student.universityId() + &quot;\n&quot;</span>
+<span class="nc" id="L167">                        + &quot;NetID: &quot; + student.netId() + &quot;\n&quot;</span>
+<span class="nc" id="L168">                        + &quot;Grade: &quot; + student.getGrade());</span>
+
+                // Handle item click, e.g., fetch and display students for this course section
+<span class="nc" id="L171">                itemView.setOnClickListener(v -&gt; {</span>
+<span class="nc" id="L172">                    startDetailedGradingActivity(student);</span>
+<span class="nc" id="L173">                });</span>
+<span class="nc" id="L174">            }</span>
+
+            private void startDetailedGradingActivity(Student student) {
+                // Create an Intent to start the DetailedGradingActivity
+<span class="nc" id="L178">                Intent intent = new Intent(itemView.getContext(), DetailedGradingActivity.class);</span>
+
+                // Pass any necessary data to the DetailedGradingActivity using Intent extras
+<span class="nc" id="L181">                intent.putExtra(&quot;grade&quot;, student.getGrade());</span>
+<span class="nc" id="L182">                intent.putExtra(&quot;universityId&quot;, student.universityId());</span>
+<span class="nc" id="L183">                intent.putExtra(&quot;sectionId&quot;, sectionId);</span>
+
+                // Start the DetailedGradingActivity
+<span class="nc" id="L186">                itemView.getContext().startActivity(intent);</span>
+<span class="nc" id="L187">            }</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

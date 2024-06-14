@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseRatingsAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">CourseRatingsAdapter.java</span></div><h1>CourseRatingsAdapter.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+/**
+ * Adapter class to manage CourseRating objects within a RecyclerView.
+ */
+public class CourseRatingsAdapter extends RecyclerView.Adapter&lt;CourseRatingsAdapter.ViewHolder&gt; {
+    public List&lt;CourseRating&gt; ratings;
+
+    /**
+     * Constructs a CourseRatingsAdapter with a list of CourseRating objects.
+     */
+<span class="fc" id="L23">    public CourseRatingsAdapter() {</span>
+<span class="fc" id="L24">        this.ratings = ratings;</span>
+<span class="fc" id="L25">    }</span>
+
+    /**
+     * Creates a new ViewHolder instance for a CourseRating object.
+     * @param parent The parent view group in which the new view will be added
+     * @param viewType The type of view
+     * @return A ViewHolder instance representing an item view
+     */
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+<span class="nc" id="L36">        Context context = parent.getContext();</span>
+<span class="nc" id="L37">        LayoutInflater inflater = LayoutInflater.from(context);</span>
+<span class="nc" id="L38">        View ratingView = inflater.inflate(R.layout.item_course_ratings, parent, false);</span>
+<span class="nc" id="L39">        return new ViewHolder(ratingView);</span>
+    }
+
+    /**
+     * Updates the contents of the ViewHolder to reflect the item at the given position.
+     * @param holder The ViewHolder to be updated
+     * @param position The position of the item within the adapter's data set
+     */
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+<span class="nc" id="L49">        CourseRating rating = ratings.get(position);</span>
+<span class="nc" id="L50">        holder.courseNameTextView.setText(rating.getCourseName());</span>
+<span class="nc" id="L51">        holder.instructorNameTextView.setText(rating.getInstructorName());</span>
+<span class="nc" id="L52">        holder.ratingValueTextView.setText(String.valueOf(rating.getRating()));</span>
+<span class="nc" id="L53">        holder.reviewTextTextView.setText(rating.getReviewText());</span>
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Returns the total number of items in the data set held by the adapter.
+     * @return The total number of items
+     */
+    @Override
+    public int getItemCount() {
+<span class="nc" id="L62">        return ratings.size();</span>
+    }
+
+    /**
+     * ViewHolder class to represent the item view.
+     */
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView courseNameTextView;
+        public TextView instructorNameTextView;
+        public TextView ratingValueTextView;
+        public TextView reviewTextTextView;
+
+        /**
+         * Constructor for ViewHolder.
+         * @param itemView The item view to be held by the ViewHolder
+         */
+<span class="nc" id="L78">        public ViewHolder(View itemView) {</span>
+<span class="nc" id="L79">            super(itemView);</span>
+<span class="nc" id="L80">            courseNameTextView = itemView.findViewById(R.id.courseName);</span>
+<span class="nc" id="L81">            instructorNameTextView = itemView.findViewById(R.id.instructorName);</span>
+<span class="nc" id="L82">            ratingValueTextView = itemView.findViewById(R.id.ratingValue);</span>
+<span class="nc" id="L83">            reviewTextTextView = itemView.findViewById(R.id.reviewText);</span>
+<span class="nc" id="L84">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

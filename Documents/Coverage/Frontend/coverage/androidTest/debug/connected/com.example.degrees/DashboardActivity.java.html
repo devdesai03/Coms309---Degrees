@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DashboardActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">DashboardActivity.java</span></div><h1>DashboardActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * DashboardActivity serves as the central point of interaction for users when they navigate through the application's dashboard.
+ * Extending {@link AppCompatActivity}, this activity ensures a consistent user experience across different versions of Android,
+ */
+<span class="fc" id="L35">public class DashboardActivity extends AppCompatActivity {</span>
+    View backgroundTextView ;
+
+    String baseUrl() {
+<span class="fc" id="L39">        return MainActivity.getBaseURL();</span>
+    }
+    //tells the rest of the application what server to connect to
+//the client is the whole app
+    /**
+     *  the method sends a request to the server for the background color and night mode setting
+     */
+
+    private void getRequest() {
+
+        //the method is asking  the server for the background color and night mode setting
+        //When the client receives the response from the server , it updates the view object and nightmode setting such that the changes are visisble
+
+        // Request a string response from the provided URL.
+<span class="fc" id="L53">        String url = baseUrl() + &quot;/settings/&quot; + getUserid() + &quot;/userInterface&quot;;</span>
+        //ssettings is the API we agreed on
+        //userInterface is the API
+        //baseUrl is the server address(localhost:8080)
+        //localhost-IP address (IP address locates which computer to connect to)
+        //getUserid is getting the id from the dashboard activity object
+<span class="fc" id="L59">        JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.GET, url, null,</span>
+         //JsonObjectRequest is an object that represents the http request
+         //url is the path//
+         //null because a GET request does not require a body
+         //listenerObject is an object that represents what we do when we receive the response from the server
+
+<span class="fc" id="L65">                new Response.Listener&lt;JSONObject&gt;() {</span>
+                    /**
+                     * Handles JSON responses for network requests.
+                     */
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //volley framework calls the onresponse method
+        //onResponse  is the method of the lIstener that the Volley framework calls when it receives the response
+<span class="fc" id="L73">                        System.out.println(&quot;Get response is: &quot;+ response);</span>
+                        try {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                            if (response.isNull(&quot;backgroundColor&quot;))</span>
+<span class="nc" id="L76">                                return;</span>
+<span class="fc" id="L77">                            String bgColor = response.getString(&quot;backgroundColor&quot;);</span>
+<span class="fc" id="L78">                            String nightMode = response.getString(&quot;nightMode&quot;);</span>
+<span class="fc" id="L79">                            setBackgroundColor(Color.parseColor(bgColor));</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">                            if (nightMode.equals(&quot;followSystem&quot;))</span>
+<span class="fc" id="L81">                                setDarkModeState(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                            else if(nightMode.equals(&quot;on&quot;))</span>
+<span class="nc" id="L83">                                setDarkModeState(AppCompatDelegate.MODE_NIGHT_YES);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">                            else if (nightMode.equals(&quot;off&quot;))</span>
+<span class="nc" id="L85">                                setDarkModeState(AppCompatDelegate.MODE_NIGHT_NO);</span>
+                            else
+<span class="nc" id="L87">                                throw new RuntimeException(&quot;server returned incorrect nightMode: &quot; + nightMode);</span>
+
+
+<span class="nc" id="L90">                        } catch (JSONException e) {</span>
+                            //throw new RuntimeException(e);
+<span class="nc" id="L92">                            System.out.println(&quot;Wrong!!!! &quot; + e);</span>
+<span class="fc" id="L93">                        }</span>
+                        // Display the first 500 characters of the response string.
+                        // String response can be converted to JSONObject via
+                        // JSONObject object = new JSONObject(response);
+//                        tvResponse.setText(&quot;Response is: &quot;+ response);
+<span class="fc" id="L98">                    }</span>
+                },
+<span class="fc" id="L100">                new Response.ErrorListener() {</span>
+                    /**
+                     * This method outputs an error
+                     * @param error
+                     */
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+//                        tvResponse.setText(&quot;That didn't work!&quot; + error.toString());
+<span class="nc" id="L108">                        System.out.println(&quot;That didn't work!&quot; + error.toString());</span>
+<span class="nc" id="L109">                    }</span>
+<span class="fc" id="L110">                }){</span>
+
+            @Override
+            //getHeaders method is an method of the request object
+            //tells the volley framework what HEADERS we want in our request
+            //Volley framework handles the http connection to the server
+            //Handles all the requests and all the responses
+/**
+ * getHeaders method is an method that tells the volley framework what HEADERS we want in our request
+ * @return A map of HTTP header field names to their values.
+ * @throws AuthFailureError if authentication fails while attempting to retrieve the headers.
+ */
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="fc" id="L123">                HashMap&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();</span>
+                //                headers.put(&quot;Authorization&quot;, &quot;Bearer YOUR_ACCESS_TOKEN&quot;);
+                //                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);
+<span class="fc" id="L126">                return headers;</span>
+            }
+
+            @Override
+            /**
+             * This method tells Volley what request parameters we have             *
+             */
+            protected Map&lt;String, String&gt; getParams() {
+<span class="nc" id="L134">                Map&lt;String, String&gt; params = new HashMap&lt;String, String&gt;();</span>
+                //                params.put(&quot;param1&quot;, &quot;value1&quot;);
+                //                params.put(&quot;param2&quot;, &quot;value2&quot;);
+<span class="nc" id="L137">                return params;</span>
+            }
+
+        };
+//        System.out.println(&quot;Response is: &quot;+ &quot;jjjjj&quot;);
+
+        // Adding request to request queue
+<span class="fc" id="L144">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);</span>
+<span class="fc" id="L145">    }</span>
+//VolleySingleton.getInstance(getApplicationContext()) creates an instance of Volley. We had initially created our own object and we had not given it to Volley
+    /**
+     * putRequest()  updates the background color and night mode setting and it  sends a PUT request for the server to update the changes
+     */
+    private void putRequest(String color, String nightMode) {
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (color != null)</span>
+<span class="fc" id="L152">        setBackgroundColor(Color.parseColor(color));</span>
+        else
+<span class="fc" id="L154">            setBackgroundColor(Color.BLUE);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (nightMode.equals(&quot;followSystem&quot;))</span>
+<span class="fc" id="L156">            setDarkModeState(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        else if(nightMode.equals(&quot;on&quot;))</span>
+<span class="fc" id="L158">            setDarkModeState(AppCompatDelegate.MODE_NIGHT_YES);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        else if (nightMode.equals(&quot;off&quot;))</span>
+<span class="fc" id="L160">            setDarkModeState(AppCompatDelegate.MODE_NIGHT_NO);</span>
+<span class="nc" id="L161">        else assert false;</span>
+
+        // Request a string response from the provided URL.
+<span class="fc" id="L164">        String url = baseUrl() + &quot;/settings/&quot; + getUserid() + &quot;/userInterface&quot;;</span>
+
+<span class="fc" id="L166">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="fc" id="L168">            body.put(&quot;backgroundColor&quot;, color);</span>
+<span class="fc" id="L169">            body.put(&quot;nightMode&quot;, nightMode);</span>
+
+<span class="nc" id="L171">        } catch (JSONException e) {</span>
+<span class="nc" id="L172">            throw new RuntimeException(e);</span>
+<span class="fc" id="L173">        }</span>
+
+<span class="fc" id="L175">        JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.PUT, url, body,</span>
+<span class="fc" id="L176"> new Response.Listener&lt;JSONObject&gt;() {</span>
+                                   @Override
+                    public void onResponse(JSONObject response) {
+
+                        // Display the first 500 characters of the response string.
+                        // String response can be converted to JSONObject via
+                        // JSONObject object = new JSONObject(response);
+//                        tvResponse.setText(&quot;Response is: &quot;+ response);
+<span class="fc" id="L184">                        System.out.println(&quot;Put response is: &quot;+ response);</span>
+<span class="fc" id="L185">                    }</span>
+                },
+<span class="fc" id="L187">                new Response.ErrorListener() {</span>
+                    /**
+                     * This method is called when there is an error during the network request.
+                     * @param error The error object containing details about what went wrong.
+                     * @see VolleyError
+                     */
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+//                        tvResponse.setText(&quot;That didn't work!&quot; + error.toString());
+<span class="nc" id="L196">                        System.out.println(&quot;That didn't work!&quot; + error.toString());</span>
+<span class="nc" id="L197">                    }</span>
+<span class="fc" id="L198">                }){</span>
+
+            /**
+             * Retrieves the HTTP headers required for making a network request.
+             * &lt;p&gt;
+             * This method is used to add any custom headers that are required for
+             * making a network request. In this implementation, the method returns
+             * an empty set of headers, but it can be modified to include necessary
+             * headers such as &quot;Authorization&quot; for authentication purposes, and
+             * &quot;Content-Type&quot; to specify the content type of the request.
+             * &lt;/p&gt;
+             *
+             * @return a map of HTTP header field names to their respective values.
+             * @throws AuthFailureError if there is an authentication failure while
+             *         attempting to retrieve the headers.
+             *
+             * @see AuthFailureError
+             */
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+<span class="fc" id="L218">                HashMap&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();</span>
+                //                headers.put(&quot;Authorization&quot;, &quot;Bearer YOUR_ACCESS_TOKEN&quot;);
+                //                headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);
+<span class="fc" id="L221">                return headers;</span>
+            }
+
+            @Override
+            protected Map&lt;String, String&gt; getParams() {
+<span class="nc" id="L226">                Map&lt;String, String&gt; params = new HashMap&lt;String, String&gt;();</span>
+                //                params.put(&quot;param1&quot;, &quot;value1&quot;);
+                //                params.put(&quot;param2&quot;, &quot;value2&quot;);
+<span class="nc" id="L229">                return params;</span>
+            }
+
+        };
+//        System.out.println(&quot;Response is: &quot;+ &quot;jjjjj&quot;);
+
+        // Adding request to request queue
+<span class="fc" id="L236">        VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);</span>
+<span class="fc" id="L237">    }</span>
+
+<span class="fc" id="L239">    private static long userid = 7;</span>
+
+<span class="fc" id="L241">    private static Long isuRegistrationId = (long)19;</span>
+
+    /**
+     * this method returns the userid
+     * @return userid
+     */
+    public static long getUserid(){
+<span class="fc" id="L248">        return userid;</span>
+    }
+
+    /**
+     * This method returns isuRegistrationId
+     * @return isuRegistrationId
+     */
+<span class="fc" id="L255">    public static Long getIsuRegistrationId() { return isuRegistrationId; }</span>
+
+    /**
+     * Sets the user ID.
+     * This method updates the user ID of the current object with the provided value.
+     * @param userid the new user ID to be set.
+     */
+    public void setUserid(long userid) {
+<span class="fc" id="L263">        this.userid = userid;</span>
+<span class="fc" id="L264">    }</span>
+
+    /**
+     * Indicates whether an item, event, or condition has appeared before.
+     */
+<span class="fc" id="L269">    public boolean hasAppearedBefore = false;</span>
+    private int backgroundColor;
+    private int darkModeState;
+
+    private void setBackgroundColor(int backgroundColor) {
+<span class="fc" id="L274">        this.backgroundTextView.setBackgroundColor(backgroundColor);</span>
+<span class="fc" id="L275">        this.backgroundColor = backgroundColor;</span>
+<span class="fc" id="L276">    }</span>
+    private int getBackgroundColor() {
+<span class="nc" id="L278">        return this.backgroundColor;</span>
+    }
+    private void setDarkModeState(int darkModeState) {
+<span class="fc" id="L281">        AppCompatDelegate.setDefaultNightMode(darkModeState);</span>
+<span class="fc" id="L282">        this.darkModeState = darkModeState;</span>
+<span class="fc" id="L283">    }</span>
+    private int getDarkModeState() {
+<span class="nc" id="L285">        return this.darkModeState;</span>
+    }
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        //onSaveInstanceStance method is called when Android is about to destroy our dashboard activity object such the screen settings do not change
+        // Before object is destroyed, Android sends us a savedInstanceState object which we use to store information that we can read when the object is recreated
+<span class="fc" id="L291">        super.onSaveInstanceState(savedInstanceState);</span>
+<span class="fc" id="L292">        savedInstanceState.putBoolean(&quot;hasAppearedBefore&quot;, hasAppearedBefore);</span>
+<span class="fc" id="L293">        savedInstanceState.putInt(&quot;backgroundColor&quot;, backgroundColor);</span>
+<span class="fc" id="L294">        savedInstanceState.putInt(&quot;darkModeState&quot;, darkModeState);</span>
+<span class="fc" id="L295">        System.out.println(&quot;Saving instance state: &quot; + savedInstanceState);</span>
+<span class="fc" id="L296">    }</span>
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//this method is called when Android recreates our object
+<span class="fc" id="L300">        super.onRestoreInstanceState(savedInstanceState);</span>
+<span class="fc" id="L301">        System.out.println(&quot;Restoring instance state: &quot; + savedInstanceState);</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">        if (savedInstanceState.containsKey(&quot;hasAppearedBefore&quot;)) {</span>
+<span class="fc" id="L303">            setBackgroundColor(savedInstanceState.getInt(&quot;backgroundColor&quot;));</span>
+<span class="fc" id="L304">            setDarkModeState(savedInstanceState.getInt(&quot;darkModeState&quot;));</span>
+<span class="fc" id="L305">            hasAppearedBefore = savedInstanceState.getBoolean(&quot;hasAppearedBefore&quot;);</span>
+        }
+<span class="fc" id="L307">    }</span>
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        //onCreate is called whenever an activity object is created
+        // it is used for initialization
+<span class="fc" id="L312">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L313">        setUserid(getIntent().getLongExtra(&quot;userId&quot;, getUserid()));</span>
+
+<span class="fc" id="L315">        VolleySingleton.getInstance(getApplicationContext())</span>
+<span class="fc" id="L316">                .addToRequestQueue(new JsonObjectRequest(</span>
+<span class="fc" id="L317">                        baseUrl() + &quot;/users/&quot; + getUserid(),</span>
+                        (JSONObject obj) -&gt; {
+                            try {
+<span class="fc" id="L320">                                JSONObject isuRegistration = obj.getJSONObject(&quot;isuRegistration&quot;);</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">                                if (isuRegistration == null) return;</span>
+<span class="fc" id="L322">                                this.isuRegistrationId = isuRegistration.getLong(&quot;universityId&quot;);</span>
+<span class="fc" id="L323">                                System.out.println(&quot;ISURegistration ID: &quot; + isuRegistrationId);</span>
+<span class="nc" id="L324">                            } catch (JSONException e) {</span>
+<span class="nc" id="L325">                                e.printStackTrace();</span>
+<span class="fc" id="L326">                            }</span>
+<span class="fc" id="L327">                        },</span>
+                        (VolleyError err) -&gt; {
+<span class="nc" id="L329">                            err.printStackTrace();</span>
+<span class="nc" id="L330">                        }</span>
+                ));
+
+<span class="fc" id="L333">        System.out.println(getUserid());</span>
+<span class="fc" id="L334">        setContentView(R.layout.activity_dashboard);</span>
+
+        // Initialize TextViews
+<span class="fc" id="L337">        TextView CourseRatingsTextView = findViewById(R.id.textViewCourseRatings);</span>
+<span class="fc" id="L338">        TextView coursesTextView = findViewById(R.id.textViewCourses);</span>
+<span class="fc" id="L339">        TextView advisorsInstructorsTextView = findViewById(R.id.textViewAdvisorsInstructors);</span>
+<span class="fc" id="L340">        TextView toDoListTextView = findViewById(R.id.textViewToDoList);</span>
+<span class="fc" id="L341">        TextView degreeFlowchartTextView = findViewById(R.id.textViewDegreeFlowchart);</span>
+<span class="fc" id="L342">        TextView schedulerTextView = findViewById(R.id.textViewScheduler);</span>
+<span class="fc" id="L343">        TextView BookAppointmentTextView = findViewById(R.id.bookAppointment);</span>
+<span class="fc" id="L344">        TextView ListUsers = findViewById(R.id.manageUsers);</span>
+<span class="fc" id="L345">        TextView AuditDegree= findViewById(R.id.auditDegree);</span>
+
+<span class="fc" id="L347">        View settingsButtonView = findViewById(R.id.settingsButton);</span>
+<span class="fc" id="L348">        this.backgroundTextView = findViewById(R.id.background);</span>
+//        backgroundTextView.setBackgroundColor(Color.parseColor(&quot;#FFA500&quot;));
+<span class="pc bpc" id="L350" title="1 of 4 branches missed.">        if (savedInstanceState != null &amp;&amp; savedInstanceState.containsKey(&quot;hasAppearedBefore&quot;)) {</span>
+<span class="fc" id="L351">            this.hasAppearedBefore = savedInstanceState.getBoolean(&quot;hasAppearedBefore&quot;);</span>
+        }
+<span class="fc bfc" id="L353" title="All 2 branches covered.">        if (!hasAppearedBefore) {</span>
+<span class="fc" id="L354">            System.out.println(&quot;onCreate called&quot;);</span>
+<span class="fc" id="L355">            this.getRequest();</span>
+<span class="fc" id="L356">            this.hasAppearedBefore = true;</span>
+        }
+<span class="fc" id="L358">        findViewById(R.id.bookAppointment).setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L359">            startActivity(new Intent(DashboardActivity.this, bookAppointment.class));</span>
+<span class="fc" id="L360">        });</span>
+
+<span class="fc" id="L362">        findViewById(R.id.manageUsers).setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L363">            startActivity(new Intent(DashboardActivity.this, list_Users.class));</span>
+<span class="fc" id="L364">        });</span>
+<span class="fc" id="L365">        findViewById(R.id.auditDegree).setOnClickListener(view -&gt; {</span>
+<span class="fc" id="L366">            startActivity(new Intent(DashboardActivity.this, Degree_Audit.class));</span>
+<span class="fc" id="L367">        });</span>
+
+<span class="fc" id="L369">        findViewById(R.id.fourYearPlanner).setOnClickListener(view -&gt; {</span>
+<span class="nc" id="L370">            startActivity(new Intent(DashboardActivity.this, FourYearPlannerActivity.class));</span>
+<span class="nc" id="L371">        });</span>
+
+        // Set click listeners for each category
+<span class="fc" id="L374">        CourseRatingsTextView.setOnClickListener(new View.OnClickListener() {</span>
+            /**
+             * This method is invoked when a view associated with this click listener is clicked.             *
+             * @param view The view that was clicked.
+             */
+
+            @Override
+            public void onClick(View view) {
+                // Handle Personal Account click
+<span class="nc" id="L383">                startActivity(new Intent(DashboardActivity.this, courseRatings.class));</span>
+<span class="nc" id="L384">            }</span>
+        });
+
+<span class="fc" id="L387">        coursesTextView.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Handle Courses click
+<span class="fc" id="L391">                startActivity(new Intent(DashboardActivity.this, courseActivity.class));</span>
+<span class="fc" id="L392">            }</span>
+        });
+
+<span class="fc" id="L395">        advisorsInstructorsTextView.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Handle Advisors and Instructors click
+<span class="fc" id="L399">                startActivity(new Intent(DashboardActivity.this, Chat_Bot.class));</span>
+<span class="fc" id="L400">            }</span>
+        });
+
+<span class="fc" id="L403">        toDoListTextView.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Handle To-Do List click
+<span class="nc" id="L407">                startActivity(new Intent(DashboardActivity.this, AdvisorChatActivity.class));</span>
+<span class="nc" id="L408">            }</span>
+        });
+
+<span class="fc" id="L411">        degreeFlowchartTextView.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Handle Degree Flowchart click
+<span class="fc" id="L415">                startActivity(new Intent(DashboardActivity.this, degreeflowchart.class));</span>
+<span class="fc" id="L416">            }</span>
+        });
+
+<span class="fc" id="L419">        schedulerTextView.setOnClickListener(new View.OnClickListener() {</span>
+            /**
+             *
+             * @param view The method is called when a view is clicked.
+             */
+            @Override
+            public void onClick(View view) {
+                // Handle Scheduler click
+<span class="nc" id="L427">                startActivity(new Intent(DashboardActivity.this, SchedulerActivity.class));</span>
+<span class="nc" id="L428">            }</span>
+        });
+/**
+ * Responds to click events on the settings button.
+ * &lt;p&gt;
+ * This method is called when the settings button is clicked. In response,
+ * it displays the settings popup by calling {@link #showSettingsPopup()}.
+ * &lt;/p&gt;
+ *
+ * @param view The view that was clicked, which should be the settings button in this context.
+ */
+<span class="fc" id="L439">        settingsButtonView.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                //onClick() makes sure that when we click the settings button, it takes us to the showPopUp
+                // Handle settings button click
+<span class="fc" id="L444">                showSettingsPopup();</span>
+<span class="fc" id="L445">            }</span>
+        });
+<span class="fc" id="L447">    }</span>
+    /**
+     * Displays a popup dialog that allows the user to change settings for the dashboard.
+     * The popup features two dropdown menus (Spinners) for the user to select from predefined options.
+     * &lt;p&gt;The method sets up an AlertDialog.Builder for creating the settings popup, with
+     * the title &quot;Change Dashboard Settings&quot;.
+     */
+    public void showSettingsPopup() {
+<span class="fc" id="L455">        final String POPUP_LOGIN_TITLE=&quot;Change Dashboard Settings&quot;;</span>
+//        final String POPUP_LOGIN_TEXT=&quot;Please fill in your credentials&quot;;
+
+<span class="fc" id="L458">        AlertDialog.Builder alert = new AlertDialog.Builder(this);</span>
+
+<span class="fc" id="L460">        alert.setTitle(POPUP_LOGIN_TITLE);</span>
+//        alert.setMessage(POPUP_LOGIN_TEXT);
+
+        // Set an EditText view to get user input
+<span class="fc" id="L464">        final Spinner color = new Spinner(this);</span>
+        //A spinner is drop-down menu
+<span class="fc" id="L466">        ArrayAdapter&lt;String&gt; spinnerArrayAdapter = new ArrayAdapter&lt;String&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item,
+                new String[]{&quot;red&quot;, &quot;orange&quot;, &quot;yellow&quot;, &quot;green&quot;, &quot;blue&quot;});
+<span class="fc" id="L469">        color.setAdapter(spinnerArrayAdapter);</span>
+<span class="fc" id="L470">        final Spinner theme = new Spinner(this);</span>
+<span class="fc" id="L471">        ArrayAdapter&lt;String&gt; spinnerArrayAdapter2 = new ArrayAdapter&lt;String&gt;(this,</span>
+                android.R.layout.simple_spinner_dropdown_item,
+                new String[]{&quot;darkMode&quot;, &quot;lightMode&quot;, &quot;sync with system&quot;});
+<span class="fc" id="L474">        theme.setAdapter(spinnerArrayAdapter2);</span>
+<span class="fc" id="L475">        LinearLayout layout = new LinearLayout(getApplicationContext());</span>
+<span class="fc" id="L476">        layout.setOrientation(LinearLayout.VERTICAL);</span>
+<span class="fc" id="L477">        layout.addView(color);</span>
+<span class="fc" id="L478">        layout.addView(theme);</span>
+<span class="fc" id="L479">        alert.setView(layout);</span>
+
+<span class="fc" id="L481">        alert.setPositiveButton(&quot;Ok&quot;, new DialogInterface.OnClickListener() {</span>
+            /**
+             * Handles click events on the settings popup dialog, applying the selected color and theme settings.
+             * @param dialog the dialog interface
+             * @param whichButton the button that was clicked
+             */
+
+
+            public void onClick(DialogInterface dialog, int whichButton) {
+<span class="fc" id="L490">                String colorName = color.getSelectedItem().toString();</span>
+<span class="fc" id="L491">                String themeName = theme.getSelectedItem().toString();</span>
+<span class="fc" id="L492">                String theme = null;</span>
+<span class="fc" id="L493">                String colorValue = null;</span>
+
+<span class="fc bfc" id="L495" title="All 2 branches covered.">                if (colorName.equals(&quot;red&quot;) )</span>
+<span class="fc" id="L496">                    colorValue = &quot;#FFAAAA&quot;;</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">                else if (colorName.equals(&quot;green&quot;) )</span>
+<span class="fc" id="L498">                    colorValue = &quot;#008000&quot;;</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">                else if (colorName.equals(&quot;yellow&quot;) )</span>
+<span class="fc" id="L500">                    colorValue = &quot;#FFFF00&quot;;</span>
+
+<span class="fc bfc" id="L502" title="All 2 branches covered.">                else if  (colorName.equals(&quot;orange&quot;) )</span>
+<span class="fc" id="L503">                    colorValue = &quot;#FFA500&quot;;</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                else if (colorName.equals(&quot;blue&quot;))</span>
+<span class="fc" id="L505">                    colorValue = null;</span>
+<span class="nc" id="L506">                else assert false;</span>
+
+<span class="fc bfc" id="L508" title="All 2 branches covered.">                if (themeName.equals(&quot;darkMode&quot;) )</span>
+<span class="fc" id="L509">                    theme = &quot;on&quot;;</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">                else if (themeName.equals(&quot;lightMode&quot;) )</span>
+<span class="fc" id="L511">                    theme = &quot;off&quot;;</span>
+<span class="pc bpc" id="L512" title="1 of 2 branches missed.">                else if (themeName.equals(&quot;sync with system&quot;))</span>
+<span class="fc" id="L513">                    theme = &quot;followSystem&quot;;</span>
+                else
+<span class="nc" id="L515">                    assert false;</span>
+                // Do something with value!
+<span class="fc" id="L517">                putRequest(colorValue, theme);</span>
+<span class="fc" id="L518">            }</span>
+        });
+
+
+<span class="fc" id="L522">        alert.setNegativeButton(&quot;Cancel&quot;, new DialogInterface.OnClickListener() {</span>
+
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+<span class="nc" id="L526">            }</span>
+        });
+
+<span class="fc" id="L529">        alert.show();</span>
+<span class="fc" id="L530">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

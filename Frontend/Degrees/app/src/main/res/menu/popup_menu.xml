@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <item
+            android:id="@+id/menu_get_chat_history"
+            android:title="@string/get_chat_history" />
+        <item
+            android:id="@+id/menu_get_online_users"
+            android:title="@string/get_online_users" />
+        <item
+            android:id="@+id/menu_get_breakout_rooms"
+            android:title="@string/get_breakout_rooms" />
+    </menu>

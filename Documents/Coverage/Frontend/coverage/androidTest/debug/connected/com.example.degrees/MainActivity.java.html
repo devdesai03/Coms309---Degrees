@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainActivity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">MainActivity.java</span></div><h1>MainActivity.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import android.content.Intent;
+import android.os.Bundle;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.android.material.snackbar.Snackbar;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.View;
+
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
+import com.example.degrees.databinding.ActivityMainBinding;
+
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * This activity represents the main login screen of the application.
+ */
+<span class="fc" id="L40">public class MainActivity extends AppCompatActivity {</span>
+
+    // Class members
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityMainBinding binding;
+    private EditText emailEditText;
+    private EditText passwordEditText;
+
+    /**
+     * Initializes the activity.
+     *
+     * @param savedInstanceState The saved instance state.
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L55">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L56">        binding = ActivityMainBinding.inflate(getLayoutInflater());</span>
+<span class="fc" id="L57">        setContentView(binding.getRoot());</span>
+
+<span class="fc" id="L59">        emailEditText = findViewById(R.id.email);</span>
+<span class="fc" id="L60">        passwordEditText = findViewById(R.id.password);</span>
+
+<span class="fc" id="L62">        Button signButton = findViewById(R.id.SignIn);</span>
+        // Set OnClickListener for the sign-in button
+<span class="fc" id="L64">        signButton.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+<span class="nc" id="L67">                loginUser();</span>
+<span class="nc" id="L68">            }</span>
+        });
+<span class="fc" id="L70">    }</span>
+
+    /**
+     * Performs the user login process.
+     */
+    private void loginUser() {
+<span class="nc" id="L76">        String email = emailEditText.getText().toString().trim();</span>
+<span class="nc" id="L77">        String password = passwordEditText.getText().toString().trim();</span>
+<span class="nc" id="L78">        loginPostRequest(email, password);</span>
+        // Get the user-entered email and password
+
+<span class="nc" id="L81">    }</span>
+
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(binding.toolbar);
+
+//        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+//        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
+//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
+//        binding.fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, &quot;Replace with your own action&quot;, Snackbar.LENGTH_LONG)
+//                        .setAnchorView(R.id.fab)
+//                        .setAction(&quot;Action&quot;, null).show();
+//            }
+//        });
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+<span class="nc" id="L102">        getMenuInflater().inflate(R.menu.menu_main, menu);</span>
+<span class="nc" id="L103">        return true;</span>
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+<span class="nc" id="L111">        int id = item.getItemId();</span>
+
+        //noinspection SimplifiableIfStatement
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (id == R.id.action_settings) {</span>
+<span class="nc" id="L115">            return true;</span>
+        }
+
+<span class="nc" id="L118">        return super.onOptionsItemSelected(item);</span>
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+<span class="nc" id="L123">        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        return NavigationUI.navigateUp(navController, appBarConfiguration)</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                || super.onSupportNavigateUp();</span>
+    }
+
+    public void onCreateNewUserButtonClick(View view) {
+<span class="nc" id="L129">        Button signUpButton = findViewById(R.id.CreateNewUser);</span>
+<span class="nc" id="L130">        signUpButton.setOnClickListener(new View.OnClickListener() {</span>
+            @Override
+            public void onClick(View view) {
+                // Launch the Sign-Up Activity
+<span class="nc" id="L134">                Intent intent = new Intent(MainActivity.this, CreateUserActivity.class);</span>
+<span class="nc" id="L135">                startActivity(intent);</span>
+<span class="nc" id="L136">            }</span>
+        });
+<span class="nc" id="L138">    }</span>
+
+    /**
+     * Retrieves the base URL for API requests.
+     *
+     * @return The base URL as a string.
+     */
+    public static String getBaseURL() {
+<span class="fc" id="L146">        return &quot;http://coms-309-036.class.las.iastate.edu:8080/&quot;;</span>
+    }
+
+    /**
+     * Initiates the HTTP POST request to log in the user.
+     *
+     * @param email The user's email address.
+     * @param password The user's password.
+     */
+    private void loginPostRequest(String email, String password) {
+<span class="nc" id="L156">        String url = getBaseURL() + &quot;/login&quot;;</span>
+<span class="nc" id="L157">        JSONObject body = new JSONObject();</span>
+        try {
+<span class="nc" id="L159">            body.put(&quot;userEmail&quot;, email);</span>
+<span class="nc" id="L160">            body.put(&quot;userPassword&quot;, password);</span>
+<span class="nc" id="L161">        } catch (JSONException e) {</span>
+<span class="nc" id="L162">            throw new RuntimeException(e);</span>
+<span class="nc" id="L163">        }</span>
+<span class="nc" id="L164">        JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, url, body,</span>
+<span class="nc" id="L165">                new Response.Listener&lt;JSONObject&gt;() {</span>
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            // Get the &quot;didSucceed&quot; value from the response
+<span class="nc" id="L170">                            boolean didSucceed = response.getBoolean(&quot;didSucceed&quot;);</span>
+
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                            if (didSucceed) {</span>
+                                // Login successful, navigate to the next screen for verification
+<span class="nc" id="L174">                                Intent intent = new Intent(MainActivity.this, VerificationActivity.class);</span>
+<span class="nc" id="L175">                                intent.putExtra(&quot;email&quot;, email);</span>
+<span class="nc" id="L176">                                startActivity(intent);</span>
+<span class="nc" id="L177">                            } else {</span>
+                                // Login failed, show an error message
+<span class="nc" id="L179">                                Snackbar.make(binding.getRoot(), &quot;Invalid email or password. Please try again.&quot;, Snackbar.LENGTH_LONG).show();</span>
+                            }
+<span class="nc" id="L181">                        } catch (JSONException e) {</span>
+<span class="nc" id="L182">                            e.printStackTrace();</span>
+<span class="nc" id="L183">                        }</span>
+<span class="nc" id="L184">                    }</span>
+                },
+<span class="nc" id="L186">                new Response.ErrorListener() {</span>
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // Handle the error (e.g., network error)
+<span class="nc" id="L190">                        System.out.println(error);</span>
+<span class="nc" id="L191">                        Snackbar.make(binding.getRoot(), &quot;Login failed. Please check your network connection.&quot;, Snackbar.LENGTH_LONG).show();</span>
+<span class="nc" id="L192">                    }</span>
+<span class="nc" id="L193">                }) {</span>
+            @Override
+            public Map&lt;String, String&gt; getHeaders() throws AuthFailureError {
+                // Add headers if needed (e.g., authentication token)
+<span class="nc" id="L197">                Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();</span>
+                // headers.put(&quot;Authorization&quot;, &quot;Bearer YOUR_ACCESS_TOKEN&quot;);
+                // headers.put(&quot;Content-Type&quot;, &quot;application/json&quot;);
+<span class="nc" id="L200">                return headers;</span>
+            }
+        };
+
+        // Add the request to the Volley request queue
+<span class="nc" id="L205">        VolleySingleton2.getInstance(getApplicationContext()).addToRequestQueue(jsonRequest);</span>
+<span class="nc" id="L206">    }</span>
+}
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>courseRatings.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=0;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">debug</a> &gt; <a href="index.source.html" class="el_package">com.example.degrees</a> &gt; <span class="el_source">courseRatings.java</span></div><h1>courseRatings.java</h1><pre class="source lang-java linenums">package com.example.degrees;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RatingBar;
+import android.widget.TextView;
+
+import com.android.volley.Request;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * This class enables the user to rate a class they have a taken and leave a comment about the class experience
+ */
+<span class="fc" id="L23">public class courseRatings extends AppCompatActivity {</span>
+
+    TextView rateCount, showRating;
+    EditText review;
+    Button submit;
+    RatingBar ratingBar;
+    float rateValue; String temp;
+
+
+<span class="fc" id="L32">    private Long courseId = Long.valueOf(12);</span>
+
+    /**
+     * This method sets the courseId
+     * @param courseId
+     */
+    public void setCourseId(Long courseId) {
+<span class="fc" id="L39">        this.courseId = courseId;</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+<span class="fc" id="L44">        super.onCreate(savedInstanceState);</span>
+<span class="fc" id="L45">        setContentView(R.layout.activity_course_ratings);</span>
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (getIntent().hasExtra(&quot;courseId&quot;)) {</span>
+<span class="fc" id="L48">            setCourseId(getIntent().getLongExtra(&quot;courseId&quot;, -1));</span>
+        }
+
+<span class="fc" id="L51">        rateCount = findViewById(R.id.rateCount);</span>
+<span class="fc" id="L52">        ratingBar =findViewById(R.id.ratingBar);</span>
+<span class="fc" id="L53">        review =findViewById(R.id.review);</span>
+<span class="fc" id="L54">        submit = findViewById(R.id.submitBtn);</span>
+<span class="fc" id="L55">        showRating =findViewById(R.id.showRating);</span>
+
+<span class="fc" id="L57">        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {</span>
+                /**
+                 * Callback method to be invoked when the rating of a RatingBar changes.
+                 * It provides feedback to the user on the selected rating by categorizing the rating value
+                 * into predefined ranges like &quot;Worst&quot;, &quot;Bad&quot;, &quot;Average&quot;, &quot;Good&quot;, and &quot;Excellent&quot;.
+                 */
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+<span class="fc" id="L65">                rateValue = ratingBar.getRating();</span>
+
+<span class="fc bfc" id="L67" title="All 4 branches covered.">                if(rateValue &lt;= 1 &amp;&amp; rateValue &gt; 0)</span>
+<span class="fc" id="L68">                    rateCount.setText(&quot;Worst &quot; + rateValue +&quot;/5&quot;);</span>
+<span class="fc bfc" id="L69" title="All 4 branches covered.">                else if(rateValue &lt;= 2 &amp;&amp; rateValue &gt; 1)</span>
+<span class="fc" id="L70">                    rateCount.setText(&quot;Bad &quot; + rateValue +&quot;/5&quot;);</span>
+<span class="fc bfc" id="L71" title="All 4 branches covered.">                else if(rateValue &lt;= 3 &amp;&amp; rateValue &gt; 2)</span>
+<span class="fc" id="L72">                    rateCount.setText(&quot;Average &quot; + rateValue +&quot;/5&quot;);</span>
+<span class="fc bfc" id="L73" title="All 4 branches covered.">                else if(rateValue &lt;= 4 &amp;&amp; rateValue &gt; 3)</span>
+<span class="fc" id="L74">                    rateCount.setText(&quot;Good &quot; + rateValue +&quot;/5&quot;);</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">                else if(rateValue &lt;= 5 &amp;&amp; rateValue &gt; 4)</span>
+<span class="fc" id="L76">                    rateCount.setText(&quot;Excellent &quot; + rateValue +&quot;/5&quot;);</span>
+<span class="fc" id="L77">            }</span>
+        });
+<span class="fc" id="L79">        submit.setOnClickListener(new View.OnClickListener() {</span>
+
+            /**
+             * Handles click events on views that this listener has been assigned to.
+             */
+            @Override
+            public void onClick(View v) {
+                try {
+<span class="fc" id="L87">                    JSONObject body = new JSONObject();</span>
+<span class="fc" id="L88">                    JSONObject id = new JSONObject();</span>
+<span class="fc" id="L89">                    JSONObject student = new JSONObject();</span>
+<span class="fc" id="L90">                    student.put(&quot;universityId&quot;, DashboardActivity.getIsuRegistrationId());</span>
+<span class="fc" id="L91">                    id.put(&quot;student&quot;, student);</span>
+<span class="fc" id="L92">                    JSONObject course = new JSONObject();</span>
+<span class="fc" id="L93">                    course.put(&quot;courseId&quot;, courseId);</span>
+<span class="fc" id="L94">                    id.put(&quot;course&quot;, course);</span>
+<span class="fc" id="L95">                    body.put(&quot;id&quot;, id);</span>
+<span class="fc" id="L96">                    body.put(&quot;rating&quot;, (int)rateValue);</span>
+<span class="fc" id="L97">                    body.put(&quot;reviewText&quot;, review.getText());</span>
+<span class="fc" id="L98">                    VolleySingleton.getInstance(getApplicationContext())</span>
+<span class="fc" id="L99">                            .addToRequestQueue(new JsonObjectRequest(</span>
+                                    Request.Method.POST,
+<span class="fc" id="L101">                                    MainActivity.getBaseURL() + &quot;/courseratings&quot;,</span>
+                                    body,
+                                    (JSONObject response) -&gt; {
+<span class="fc" id="L104">                                        System.out.println(&quot;Succeeded&quot;);</span>
+<span class="fc" id="L105">                                    },</span>
+                                    (VolleyError error) -&gt; {
+<span class="nc" id="L107">                                        error.printStackTrace();</span>
+<span class="nc" id="L108">                                    }</span>
+                            ));
+
+<span class="fc" id="L111">                    Intent intent = new Intent(courseRatings.this, RatingDisplayActivity.class);</span>
+<span class="fc" id="L112">                    intent.putExtra(&quot;courseId&quot;, courseId);</span>
+<span class="fc" id="L113">                    startActivity(intent);</span>
+<span class="nc" id="L114">                } catch (JSONException e) {</span>
+<span class="nc" id="L115">                    e.printStackTrace();</span>
+<span class="fc" id="L116">                }</span>
+
+<span class="fc" id="L118">               temp = rateCount.getText().toString();</span>
+<span class="fc" id="L119">               showRating.setText(&quot;Your Rating: \n&quot; + temp + &quot;\n&quot; + review.getText());</span>
+<span class="fc" id="L120">               review.setText(&quot;&quot;);</span>
+<span class="fc" id="L121">               ratingBar.setRating(0);</span>
+<span class="fc" id="L122">               rateCount.setText(&quot;&quot;);</span>
+<span class="fc" id="L123">            }</span>
+        });
+<span class="fc" id="L125">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>Generated by the Android Gradle plugin 8.1.2</div></body></html>

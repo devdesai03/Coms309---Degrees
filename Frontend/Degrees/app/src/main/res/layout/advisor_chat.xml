@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@color/IndianRed"
+    android:padding="16dp">
+
+    <!-- Chat Conversation Area -->
+
+    <!-- Username Input -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/tx1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="The conversation will appear here:\n"
+            android:textSize="16sp" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="350dp"
+        android:layout_height="450dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+    <!-- Username Input -->
+    <EditText
+        android:id="@+id/et1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Enter your username"
+        android:textColor="@color/Black"
+        android:textSize="20sp"/>
+
+    <!-- Connect Button -->
+    <Button
+        android:id="@+id/bt1"
+        android:layout_width="wrap_content"
+        android:layout_height="58dp"
+        android:text="Connect"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et1"
+        app:layout_constraintVertical_bias="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <EditText
+            android:id="@+id/et2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Type your message"
+            android:textColor="@color/Black"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/bt2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="390dp"
+        android:layout_height="116dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <!-- Get Breakout Rooms Button -->
+        <Button
+            android:id="@+id/getBreakoutRoomsBtn"
+            android:layout_width="114dp"
+            android:layout_height="85dp"
+            android:layout_marginEnd="16dp"
+            android:text="Get Breakout Rooms" />
+
+        <!-- Get Online Users Button -->
+        <Button
+            android:id="@+id/getOnlineUsersBtn"
+            android:layout_width="114dp"
+            android:layout_height="85dp"
+            android:layout_marginEnd="16dp"
+            android:text="Get Online Users" />
+
+        <!-- Get Chat History Button -->
+        <Button
+            android:id="@+id/getChatHistoryBtn"
+            android:layout_width="114dp"
+            android:layout_height="85dp"
+            android:layout_marginEnd="16dp"
+            android:text="Get Chat History" />
+    </LinearLayout>
+</LinearLayout>
